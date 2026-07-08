@@ -1,0 +1,21 @@
+# ---- Private data (never commit) ----
+# The real work-log / blurb database lives here; only sample seed data is public.
+*.db
+*.db-shm
+*.db-wal
+api/cvforge.db
+
+# ---- .NET ----
+bin/
+obj/
+
+# ---- Node / clients ----
+node_modules/
+dist/
+.angular/
+*.log
+
+# ---- misc ----
+.DS_Store
+.vscode/*
+!.vscode/extensions.json

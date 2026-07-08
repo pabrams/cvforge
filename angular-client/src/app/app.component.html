@@ -1,0 +1,103 @@
+<header>
+  <h1>CVForge <span class="fw">Angular</span></h1>
+  <p>Blurb library → CV builder → Typst export. Secret-scanned on the way in and out.</p>
+</header>
+
+<main>
+  <!-- Blurb library -->
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Blurb Library</h2>
+      <button (click)="newBlurb()">+ New</button>
+    </div>
+    <div class="filters">
+      <input placeholder="search…" [(ngModel)]="search" (ngModelChange)="reload()">
+      <select [(ngModel)]="categoryFilter" (ngModelChange)="reload()">
+        <option value="">all categories</option>
+        <option *ngFor="let c of categories" [value]="c">{{ c }}</option>
+      </select>
+    </div>
+
+    <article class="blurb" *ngFor="let b of blurbs">
+      <div class="blurb-top">
+        <span class="cat cat-{{b.category}}">{{ b.category }}</span>
+        <strong>{{ b.title }}</strong>
+        <span class="strength" title="strength">{{ '★'.repeat(b.strength) }}</span>
+        <span class="secret" *ngIf="b.secrets.length" title="contains a detected secret">🔑 secret</span>
+      </div>
+      <p class="body">{{ b.body }}</p>
+      <div class="tags"><span class="tag" *ngFor="let t of b.tags">{{ t.name }}</span></div>
+      <div class="blurb-actions">
+        <button (click)="addToCv(b)" [disabled]="inCv(b) || !activeCv">{{ inCv(b) ? 'in CV' : '+ add to CV' }}</button>
+        <button (click)="edit(b)">edit</button>
+        <button class="danger" (click)="remove(b)">delete</button>
+      </div>
+    </article>
+  </section>
+
+  <!-- CV builder -->
+  <section class="panel">
+    <div class="panel-head">
+      <h2>CV Builder</h2>
+      <button (click)="newCv()">+ New CV</button>
+    </div>
+    <select class="cv-select" [ngModel]="activeCv?.id" (ngModelChange)="selectById($event)">
+      <option *ngFor="let c of cvs" [value]="c.id">{{ c.name }}</option>
+    </select>
+
+    <div *ngIf="activeCv">
+      <ol class="items">
+        <li *ngFor="let i of activeCv.items; let idx = index">
+          <span class="cat cat-{{i.category}}">{{ i.category }}</span>
+          <span class="item-title">{{ i.title }}</span>
+          <span class="reorder">
+            <button (click)="move(idx, -1)" [disabled]="idx === 0">↑</button>
+            <button (click)="move(idx, 1)" [disabled]="idx === activeCv.items.length - 1">↓</button>
+            <button class="danger" (click)="removeFromCv(i.blurbId)">✕</button>
+          </span>
+        </li>
+      </ol>
+      <p class="empty" *ngIf="!activeCv.items.length">Add blurbs from the library →</p>
+      <button class="export" (click)="export()" [disabled]="!activeCv.items.length">Export .typ</button>
+      <p class="export-error" *ngIf="exportError">⛔ {{ exportError }}</p>
+    </div>
+  </section>
+
+  <!-- Editor -->
+  <section class="panel editor">
+    <div class="panel-head"><h2>{{ editingId ? 'Edit Blurb' : 'New Blurb' }}</h2></div>
+    <label>Title <input [(ngModel)]="editing.title"></label>
+    <label>Category
+      <select [(ngModel)]="editing.category">
+        <option *ngFor="let c of categories" [value]="c">{{ c }}</option>
+      </select>
+    </label>
+    <div class="exp-fields" *ngIf="editing.category === 'experience'">
+      <label>Org <input [(ngModel)]="editing.org"></label>
+      <label>Role <input [(ngModel)]="editing.roleTitle"></label>
+      <label>Dates <input [(ngModel)]="editing.dates"></label>
+      <label>Location <input [(ngModel)]="editing.location"></label>
+    </div>
+    <label>Body (one bullet per line)
+      <textarea rows="6" [(ngModel)]="editing.body" (ngModelChange)="onBodyChange()"></textarea>
+    </label>
+
+    <div class="scan" [class.bad]="liveFindings.length" [class.good]="!liveFindings.length && editing.body">
+      <ng-container *ngIf="liveFindings.length; else clean">
+        🔑 {{ liveFindings.length }} secret(s):
+        <code *ngFor="let f of liveFindings">{{ f.rule }}:{{ f.preview }}</code>
+        <button (click)="redact()">redact all</button>
+      </ng-container>
+      <ng-template #clean><span *ngIf="editing.body">✓ no secrets detected</span></ng-template>
+    </div>
+
+    <label>Tags (comma-separated) <input [(ngModel)]="tagsText"></label>
+    <label class="row">Strength <input type="range" min="0" max="5" [(ngModel)]="editing.strength"> {{ editing.strength }}</label>
+    <label class="row"><input type="checkbox" [(ngModel)]="editing.publicSafe"> mark public-safe (blocked while secrets present)</label>
+
+    <div class="editor-actions">
+      <button class="primary" (click)="save()" [disabled]="!editing.title">{{ editingId ? 'Save' : 'Create' }}</button>
+      <button (click)="newBlurb()">clear</button>
+    </div>
+  </section>
+</main>
