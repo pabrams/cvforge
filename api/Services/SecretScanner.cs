@@ -34,11 +34,16 @@ public class SecretScanner
                 findings.Add(new SecretFinding(rule, Mask(m.Value), m.Index, m.Length));
 
         // Entropy sweep: flag long high-entropy tokens the named rules didn't already cover.
+        // Real credentials mix letters and digits; requiring that mix (plus a higher entropy
+        // floor) keeps ordinary hyphenated prose — "infrastructure-as-code",
+        // "capability-evaluation", "publishing/governing" — from being misread as a secret.
         foreach (Match m in Regex.Matches(text, @"[A-Za-z0-9/+_\-]{20,}"))
         {
             if (findings.Any(f => m.Index >= f.Index && m.Index < f.Index + f.Length)) continue;
-            if (ShannonEntropy(m.Value) >= 3.5)
-                findings.Add(new SecretFinding("high-entropy", Mask(m.Value), m.Index, m.Length));
+            var tok = m.Value;
+            var mixedAlphanumeric = tok.Any(char.IsLetter) && tok.Any(char.IsDigit);
+            if (mixedAlphanumeric && ShannonEntropy(tok) >= 3.8)
+                findings.Add(new SecretFinding("high-entropy", Mask(tok), m.Index, m.Length));
         }
 
         return findings.OrderBy(f => f.Index).ToList();

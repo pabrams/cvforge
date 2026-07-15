@@ -5,7 +5,7 @@ import { api, type Blurb, type BlurbInput, type Cv, type SecretFinding } from '.
 const EMPTY: BlurbInput = {
   title: '', category: 'experience', body: '',
   org: '', location: '', roleTitle: '', dates: '',
-  strength: 3, publicSafe: false, tags: [],
+  strength: 3, publicSafe: false, locked: false, tags: [],
 };
 const categories = ['summary', 'experience', 'skill', 'qualification', 'education'];
 
@@ -91,7 +91,7 @@ function edit(b: Blurb) {
   editing.value = {
     title: b.title, category: b.category, body: b.body,
     org: b.org, location: b.location, roleTitle: b.roleTitle, dates: b.dates,
-    strength: b.strength, publicSafe: b.publicSafe, tags: b.tags.map(t => t.name),
+    strength: b.strength, publicSafe: b.publicSafe, locked: b.locked, tags: b.tags.map(t => t.name),
   };
   tagsText.value = b.tags.map(t => t.name).join(', ');
   liveFindings.value = b.secrets;
@@ -143,6 +143,7 @@ const bodyHasText = computed(() => editing.value.body.length > 0);
           <span class="cat" :class="'cat-' + b.category">{{ b.category }}</span>
           <strong>{{ b.title }}</strong>
           <span class="strength">{{ stars(b.strength) }}</span>
+          <span class="locked" v-if="b.locked" title="polished — used verbatim">🔒 locked</span>
           <span class="secret" v-if="b.secrets.length">🔑 secret</span>
         </div>
         <p class="body">{{ b.body }}</p>
@@ -210,6 +211,7 @@ const bodyHasText = computed(() => editing.value.body.length > 0);
 
       <label>Tags (comma-separated) <input v-model="tagsText"></label>
       <label class="row">Strength <input type="range" min="0" max="5" v-model.number="editing.strength"> {{ editing.strength }}</label>
+      <label class="row"><input type="checkbox" v-model="editing.locked"> 🔒 locked — polished wording, use verbatim (don't let an AI reword)</label>
       <label class="row"><input type="checkbox" v-model="editing.publicSafe"> mark public-safe (blocked while secrets present)</label>
 
       <div class="editor-actions">

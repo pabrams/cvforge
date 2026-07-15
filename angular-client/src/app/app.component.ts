@@ -6,7 +6,7 @@ import { ApiService, Blurb, BlurbInput, Cv, SecretFinding } from './api.service'
 const EMPTY: BlurbInput = {
   title: '', category: 'experience', body: '',
   org: '', location: '', roleTitle: '', dates: '',
-  strength: 3, publicSafe: false, tags: [],
+  strength: 3, publicSafe: false, locked: false, tags: [],
 };
 
 @Component({
@@ -107,7 +107,7 @@ export class AppComponent implements OnInit {
     this.editing = {
       title: b.title, category: b.category, body: b.body,
       org: b.org, location: b.location, roleTitle: b.roleTitle, dates: b.dates,
-      strength: b.strength, publicSafe: b.publicSafe, tags: b.tags.map(t => t.name),
+      strength: b.strength, publicSafe: b.publicSafe, locked: b.locked, tags: b.tags.map(t => t.name),
     };
     this.tagsText = b.tags.map(t => t.name).join(', ');
     this.liveFindings = b.secrets;

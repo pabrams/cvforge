@@ -23,6 +23,7 @@
         <span class="cat cat-{{b.category}}">{{ b.category }}</span>
         <strong>{{ b.title }}</strong>
         <span class="strength" title="strength">{{ '★'.repeat(b.strength) }}</span>
+        <span class="locked" *ngIf="b.locked" title="polished — used verbatim">🔒 locked</span>
         <span class="secret" *ngIf="b.secrets.length" title="contains a detected secret">🔑 secret</span>
       </div>
       <p class="body">{{ b.body }}</p>
@@ -93,6 +94,7 @@
 
     <label>Tags (comma-separated) <input [(ngModel)]="tagsText"></label>
     <label class="row">Strength <input type="range" min="0" max="5" [(ngModel)]="editing.strength"> {{ editing.strength }}</label>
+    <label class="row"><input type="checkbox" [(ngModel)]="editing.locked"> 🔒 locked — polished wording, use verbatim (don't let an AI reword)</label>
     <label class="row"><input type="checkbox" [(ngModel)]="editing.publicSafe"> mark public-safe (blocked while secrets present)</label>
 
     <div class="editor-actions">

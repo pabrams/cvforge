@@ -1,0 +1,16 @@
+{
+  "name": "cvforge-mcp",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "MCP server exposing the CVForge blurb library + CV builder to an MCP client (e.g. Claude Code).",
+  "bin": { "cvforge-mcp": "server.js" },
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test-client.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "zod": "^3.23.8"
+  }
+}

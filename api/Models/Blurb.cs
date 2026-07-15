@@ -28,5 +28,11 @@ public class Blurb
     /// <summary>Set true only once confirmed free of secrets / confidential content.</summary>
     public bool PublicSafe { get; set; }
 
+    /// <summary>
+    /// True = polished/final wording. An assembling agent must reproduce the body verbatim and
+    /// never reword it; it may only select and order the blurb. False = a draft that may still be edited.
+    /// </summary>
+    public bool Locked { get; set; }
+
     public List<Tag> Tags { get; set; } = new();
 }

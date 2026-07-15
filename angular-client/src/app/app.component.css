@@ -32,6 +32,7 @@ button.export { background: #1f4e79; color: #fff; border-color: #1f4e79; width: 
 .cat-skill { background: #fff3e0; color: #a15c00; }
 .strength { color: #e6a700; font-size: .8rem; }
 .secret { font-size: .7rem; color: #b00; background: #ffe9e9; padding: .05rem .35rem; border-radius: 3px; }
+.locked { font-size: .7rem; color: #1f4e79; background: #e7f0ff; padding: .05rem .35rem; border-radius: 3px; }
 .tag { font-size: .7rem; background: #f0f0f0; border-radius: 10px; padding: .05rem .45rem; margin-right: .25rem; }
 
 .cv-select { margin-bottom: .6rem; }

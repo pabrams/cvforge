@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "cvforge": {
+      "command": "node",
+      "args": ["mcp/server.js"],
+      "env": {
+        "CVFORGE_API_BASE": "http://localhost:5170/api"
+      }
+    }
+  }
+}

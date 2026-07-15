@@ -9,12 +9,12 @@ export interface Tag { id: number; name: string; kind: string; }
 export interface Blurb {
   id: number; title: string; category: string; body: string;
   org?: string; location?: string; roleTitle?: string; dates?: string;
-  strength: number; publicSafe: boolean; tags: Tag[]; secrets: SecretFinding[];
+  strength: number; publicSafe: boolean; locked: boolean; tags: Tag[]; secrets: SecretFinding[];
 }
 export interface BlurbInput {
   title: string; category: string; body: string;
   org?: string; location?: string; roleTitle?: string; dates?: string;
-  strength: number; publicSafe: boolean; tags: string[];
+  strength: number; publicSafe: boolean; locked: boolean; tags: string[];
 }
 export interface CvItem { id: number; blurbId: number; order: number; title: string; category: string; }
 export interface Cv { id: number; name: string; tagline: string; roleNotes: string; items: CvItem[]; }
