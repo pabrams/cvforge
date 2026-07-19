@@ -19,6 +19,7 @@ public class TypstExporter
         var experience = blurbs.Where(b => b.Category == "experience").ToList();
         var education = blurbs.Where(b => b.Category == "education").ToList();
         var skills = blurbs.Where(b => b.Category is "skill" or "qualification").ToList();
+        var competencies = blurbs.Where(b => b.Category == "competencies").ToList();
 
         var sb = new StringBuilder();
         sb.AppendLine("#import \"template.typ\": cv");
@@ -70,6 +71,19 @@ public class TypstExporter
             sb.AppendLine("#line(length: 100%, stroke: 0.4pt + rgb(\"#1f4e79\"))");
             sb.AppendLine("#v(0.2em)");
             foreach (var b in skills)
+                sb.AppendLine($"{b.Body.Trim()}\n");
+        }
+
+        // Dense, keyword-rich profile aimed at ATS parsers rather than human readers —
+        // rendered at the bottom so the human-readable summary stays the first thing seen.
+        if (competencies.Count > 0)
+        {
+            sb.AppendLine();
+            sb.AppendLine("#v(0.3em)");
+            sb.AppendLine("#text(size: 13pt, weight: \"bold\", fill: rgb(\"#1f4e79\"), \"Core Competencies\")");
+            sb.AppendLine("#line(length: 100%, stroke: 0.4pt + rgb(\"#1f4e79\"))");
+            sb.AppendLine("#v(0.2em)");
+            foreach (var b in competencies)
                 sb.AppendLine($"{b.Body.Trim()}\n");
         }
 

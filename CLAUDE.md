@@ -45,9 +45,16 @@ data under `/api/...`. The web UI is a separate SPA: `cd vue-client && npm run d
 ## Typical flow
 
 Paste a job posting → `search_blurbs` by category/tag to find relevant material → assemble the CV
-(summary → experience → skills, strongest first) from **locked** blurbs verbatim → draft only what's
-genuinely missing (flagged) → `create_cv` + `set_cv_items` → `export_typst`. Report what you used
-and what still needs the user's polish.
+(summary → experience → skills → competencies, strongest first) from **locked** blurbs verbatim →
+draft only what's genuinely missing (flagged) → `create_cv` + `set_cv_items` → `export_typst`.
+Report what you used and what still needs the user's polish.
+
+Category semantics: `summary` = short, human-readable opener (one per CV, at the top);
+`competencies` = dense keyword-rich ATS block (rendered at the bottom). Don't put keyword walls
+in `summary`.
+
+UI note: the Angular client (`angular-client/`, port 4200) is the primary UI — new features go
+there only. The Vue client is a frozen demo.
 
 See `.claude/skills/cvforge/SKILL.md` for the step-by-step.
 

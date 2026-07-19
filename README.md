@@ -2,21 +2,22 @@
 
 A small full-stack tool for assembling tailored CVs from a library of reusable, tagged **blurbs** — write each experience/skill snippet once, then compose CVs by selecting and ordering blurbs, and export straight to **Typst** (feeds an existing `build_docx.py` → `.docx` / `.pdf` pipeline).
 
-Built as a reference implementation across the stack, with the **same app implemented in both Angular and Vue** against one shared ASP.NET Core Web API.
+**Angular is the primary client and the UI going forward.** The Vue client started as a
+feature-identical twin (the project doubled as a cross-framework reference implementation), but it
+is now kept as a demo/comparison piece and is not maintained at feature parity — new UI features
+land in Angular only.
 
 ## Stack
 
 | Layer | Tech |
 |-------|------|
 | Backend | **ASP.NET Core 8 Web API**, C#, **EF Core** (SQLite), **Swagger / OpenAPI** |
-| Client A | **Angular** (standalone components, HttpClient) |
-| Client B | **Vue 3** (`<script setup>`, TypeScript, Vite) |
-
-Both clients are feature-for-feature identical and talk to the same REST API.
+| Client (primary) | **Angular** (standalone components, HttpClient) |
+| Client (demo) | **Vue 3** (`<script setup>`, TypeScript, Vite) — frozen, kept for framework comparison |
 
 ## Features
 
-- **Blurb library** — reusable CV snippets with category (summary / experience / skill / qualification / education), Markdown-ish body, many-to-many **tags**, and a self-rated strength. Search + filter.
+- **Blurb library** — reusable CV snippets with category (summary / competencies / experience / skill / qualification / education), Markdown-ish body, many-to-many **tags**, and a self-rated strength. Search + filter. `summary` is the short, human-readable opener; `competencies` is the dense, keyword-rich block aimed at ATS parsers (rendered near the bottom of the CV).
 - **CV builder** — a CV is a named, ordered selection of blurbs. Multi-select, reorder, remove.
 - **Typst export** — renders the selected blurbs into a `.typ` that imports the portfolio's shared `template.typ`.
 - **Secret scanning** — a `SecretScanner` service flags likely credentials (AWS/OpenAI/GitHub/Slack keys, JWTs, private keys, `KEY=…` assignments, plus a Shannon-entropy sweep). Findings show live as you type; a blurb can't be marked *public-safe* while it contains a secret, and **export is blocked (HTTP 409)** if any selected blurb still carries one.
@@ -37,7 +38,7 @@ ASPNETCORE_URLS=http://localhost:5170 dotnet run --no-launch-profile
 # 2) Angular client → http://localhost:4200
 cd angular-client && npm install && npm start
 
-# 3) Vue client → http://localhost:5173
+# 3) Vue client (optional demo) → http://localhost:5173
 cd vue-client && npm install && npm run dev
 ```
 

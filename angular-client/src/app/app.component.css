@@ -28,6 +28,7 @@ button.export { background: #1f4e79; color: #fff; border-color: #1f4e79; width: 
 
 .cat { font-size: .68rem; text-transform: uppercase; padding: .05rem .35rem; border-radius: 3px; background: #eee; color: #555; letter-spacing: .03em; }
 .cat-summary { background: #e7f0ff; color: #1f4e79; }
+.cat-competencies { background: #f3e8ff; color: #6b21a8; }
 .cat-experience { background: #eaf7ea; color: #2a6e2a; }
 .cat-skill { background: #fff3e0; color: #a15c00; }
 .strength { color: #e6a700; font-size: .8rem; }

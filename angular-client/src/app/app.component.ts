@@ -23,7 +23,7 @@ export class AppComponent implements OnInit {
 
   search = '';
   categoryFilter = '';
-  categories = ['summary', 'experience', 'skill', 'qualification', 'education'];
+  categories = ['summary', 'competencies', 'experience', 'skill', 'qualification', 'education'];
 
   // editor state
   editing: BlurbInput = { ...EMPTY };
