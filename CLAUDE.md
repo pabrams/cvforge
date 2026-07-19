@@ -12,10 +12,17 @@ tools: `search_blurbs`, `get_blurb`, `create_blurb`, `update_blurb`, `list_cvs`,
 **The API must be running** for those tools to work:
 
 ```bash
-cd api && ASPNETCORE_URLS=http://localhost:5170 dotnet run
+cd api && ASPNETCORE_URLS=http://localhost:5170 dotnet run --no-launch-profile
 ```
 
+`--no-launch-profile` is required: without it, `launchSettings.json` overrides `ASPNETCORE_URLS`
+and the API binds to port 5041 instead, so the MCP tools (which expect 5170) can't connect.
+
 If a tool returns a connection error, the API isn't up — tell the user to start it.
+
+The API has no homepage — `http://localhost:5170/` is a 404 by design. Swagger is at `/swagger`,
+data under `/api/...`. The web UI is a separate SPA: `cd vue-client && npm run dev`
+(http://localhost:5173) or `cd angular-client && npm start` (http://localhost:4200).
 
 ## The rules (non-negotiable)
 
@@ -43,3 +50,14 @@ genuinely missing (flagged) → `create_cv` + `set_cv_items` → `export_typst`.
 and what still needs the user's polish.
 
 See `.claude/skills/cvforge/SKILL.md` for the step-by-step.
+
+## Compiling the export to PDF
+
+`typst` is installed at `~/.local/bin/typst` (on PATH) — **don't re-download it**. Save the
+`export_typst` output next to the other CVs in `../pabrams.github.io/cv/` (it imports `template.typ`
+from there) and run `typst compile <file>.typ`.
+
+Known issue: `export_typst` output is not Typst-escaped. In markup, escape `C#` → `C\#` and
+`~` → `\~` (a bare `~` is a non-breaking space and vanishes); inside quoted strings like `tagline:`,
+do **not** escape. For ATS-bound submissions prefer the `.docx` route
+(`../pabrams.github.io/cv/build_docx.py` — Typst PDFs embed fonts some parsers can't read).

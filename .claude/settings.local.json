@@ -20,7 +20,25 @@
       "Bash(python3 build_docx.py rq11319-scope)",
       "Bash(python3 *)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" --max-time 3 http://localhost:5170/api/blurbs)",
-      "Bash(command -v sqlite3)"
+      "Bash(command -v sqlite3)",
+      "mcp__cvforge__list_cvs",
+      "Bash(curl -sL --max-time 60 -o typst.tar.xz https://github.com/typst/typst/releases/latest/download/typst-x86_64-unknown-linux-musl.tar.xz)",
+      "Bash(tar xf *)",
+      "Bash(./typst-x86_64-unknown-linux-musl/typst --version)",
+      "Bash(/tmp/claude-1000/-home-i-repos-cvforge/c5f6c3ad-535b-46b3-b396-e8272bed72e7/scratchpad/typst-x86_64-unknown-linux-musl/typst compile *)",
+      "Bash(cd *)",
+      "Bash(sed -i '/^ tagline:/s/C\\\\\\\\#/C#/g; s/~50x/\\\\\\\\~50x/g' cv-2026-07-15-dot-net-lead-modernization.typ)",
+      "Bash(pdftotext cv-2026-07-15-dot-net-lead-modernization.pdf -)",
+      "Bash(curl -s -o /dev/null -w '%{http_code}\\\\n' --max-time 3 http://localhost:5170/)",
+      "Bash(ASPNETCORE_URLS=http://localhost:5170 dotnet run)",
+      "Bash(curl -s -o /dev/null -w 'HTTP %{http_code}\\\\n' --max-time 3 http://localhost:5041/blurbs)",
+      "Bash(curl -s -o /dev/null -w 'swagger: HTTP %{http_code}\\\\n' --max-time 3 http://localhost:5041/swagger)",
+      "Bash(curl -s --max-time 3 http://localhost:5041/api/blurbs -o /dev/null -w 'api/blurbs: HTTP %{http_code}\\\\n')",
+      "Bash(ASPNETCORE_URLS=http://localhost:5170 dotnet run --no-launch-profile)",
+      "Bash(curl -s -o /dev/null -w '/: HTTP %{http_code}\\\\n' --max-time 3 http://localhost:5170/)",
+      "Bash(curl -s -o /dev/null -w '/swagger: HTTP %{http_code}\\\\n' -L --max-time 3 http://localhost:5170/swagger)",
+      "Bash(npm run *)",
+      "Skill(update-config)"
     ]
   },
   "enabledMcpjsonServers": [

@@ -32,7 +32,7 @@ Requires **.NET 8 SDK** and **Node 20+**.
 ```bash
 # 1) API  → http://localhost:5170  (Swagger at /swagger)
 cd api
-ASPNETCORE_URLS=http://localhost:5170 dotnet run
+ASPNETCORE_URLS=http://localhost:5170 dotnet run --no-launch-profile
 
 # 2) Angular client → http://localhost:4200
 cd angular-client && npm install && npm start
