@@ -18,17 +18,20 @@
       </select>
     </div>
 
-    <article class="blurb" *ngFor="let b of blurbs">
+    <article class="blurb" *ngFor="let b of blurbs"
+             [class.selected]="selectedBlurbId === b.id" (click)="selectBlurb(b)">
       <div class="blurb-top">
         <span class="cat cat-{{b.category}}">{{ b.category }}</span>
         <strong>{{ b.title }}</strong>
-        <span class="strength" title="strength">{{ '★'.repeat(b.strength) }}</span>
-        <span class="locked" *ngIf="b.locked" title="polished — used verbatim">🔒 locked</span>
-        <span class="secret" *ngIf="b.secrets.length" title="contains a detected secret">🔑 secret</span>
+        <ng-container *ngIf="selectedBlurbId === b.id">
+          <span class="strength" title="strength">{{ '★'.repeat(b.strength) }}</span>
+          <span class="locked" *ngIf="b.locked" title="polished — used verbatim">🔒 locked</span>
+          <span class="secret" *ngIf="b.secrets.length" title="contains a detected secret">🔑 secret</span>
+        </ng-container>
       </div>
-      <p class="body">{{ b.body }}</p>
+      <p class="body" *ngIf="selectedBlurbId === b.id">{{ b.body }}</p>
       <div class="tags"><span class="tag" *ngFor="let t of b.tags">{{ t.name }}</span></div>
-      <div class="blurb-actions">
+      <div class="blurb-actions" *ngIf="selectedBlurbId === b.id" (click)="$event.stopPropagation()">
         <button (click)="addToCv(b)" [disabled]="inCv(b) || !activeCv">{{ inCv(b) ? 'in CV' : '+ add to CV' }}</button>
         <button (click)="edit(b)">edit</button>
         <button class="danger" (click)="remove(b)">delete</button>

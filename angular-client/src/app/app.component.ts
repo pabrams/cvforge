@@ -23,6 +23,7 @@ export class AppComponent implements OnInit {
 
   search = '';
   categoryFilter = '';
+  selectedBlurbId: number | null = null;
   categories = ['summary', 'competencies', 'experience', 'skill', 'qualification', 'education'];
 
   // editor state
@@ -48,6 +49,8 @@ export class AppComponent implements OnInit {
       else if (this.activeCv) this.activeCv = c.find(x => x.id === this.activeCv!.id) ?? c[0] ?? null;
     });
   }
+
+  selectBlurb(b: Blurb) { this.selectedBlurbId = this.selectedBlurbId === b.id ? null : b.id; }
 
   select(cv: Cv) { this.exportError = ''; this.activeCv = cv; }
   selectById(id: number) { const cv = this.cvs.find(c => c.id === +id); if (cv) this.select(cv); }

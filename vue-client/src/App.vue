@@ -14,6 +14,7 @@ const cvs = ref<Cv[]>([]);
 const activeCv = ref<Cv | null>(null);
 const search = ref('');
 const categoryFilter = ref('');
+const selectedBlurbId = ref<number | null>(null);
 
 const editing = ref<BlurbInput>({ ...EMPTY });
 const editingId = ref<number | null>(null);
@@ -45,6 +46,10 @@ async function newCv() {
 }
 
 const inCv = (b: Blurb) => !!activeCv.value?.items.some(i => i.blurbId === b.id);
+
+function selectBlurb(b: Blurb) {
+  selectedBlurbId.value = selectedBlurbId.value === b.id ? null : b.id;
+}
 
 async function addToCv(b: Blurb) {
   if (!activeCv.value || inCv(b)) return;
@@ -138,17 +143,20 @@ const bodyHasText = computed(() => editing.value.body.length > 0);
         </select>
       </div>
 
-      <article class="blurb" v-for="b in blurbs" :key="b.id">
+      <article class="blurb" v-for="b in blurbs" :key="b.id"
+               :class="{ selected: selectedBlurbId === b.id }" @click="selectBlurb(b)">
         <div class="blurb-top">
           <span class="cat" :class="'cat-' + b.category">{{ b.category }}</span>
           <strong>{{ b.title }}</strong>
-          <span class="strength">{{ stars(b.strength) }}</span>
-          <span class="locked" v-if="b.locked" title="polished — used verbatim">🔒 locked</span>
-          <span class="secret" v-if="b.secrets.length">🔑 secret</span>
+          <template v-if="selectedBlurbId === b.id">
+            <span class="strength">{{ stars(b.strength) }}</span>
+            <span class="locked" v-if="b.locked" title="polished — used verbatim">🔒 locked</span>
+            <span class="secret" v-if="b.secrets.length">🔑 secret</span>
+          </template>
         </div>
-        <p class="body">{{ b.body }}</p>
+        <p class="body" v-if="selectedBlurbId === b.id">{{ b.body }}</p>
         <div class="tags"><span class="tag" v-for="t in b.tags" :key="t.id">{{ t.name }}</span></div>
-        <div class="blurb-actions">
+        <div class="blurb-actions" v-if="selectedBlurbId === b.id" @click.stop>
           <button @click="addToCv(b)" :disabled="inCv(b) || !activeCv">{{ inCv(b) ? 'in CV' : '+ add to CV' }}</button>
           <button @click="edit(b)">edit</button>
           <button class="danger" @click="remove(b)">delete</button>
