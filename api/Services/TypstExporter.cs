@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.RegularExpressions;
 using CvForge.Api.Models;
 
 namespace CvForge.Api.Services;
@@ -90,9 +91,16 @@ public class TypstExporter
         return sb.ToString();
     }
 
+    /// <summary>
+    /// A leading "-", "•", or "* " is a list marker and is dropped. A leading "*" that is NOT
+    /// followed by whitespace opens Typst bold markup — stripping it would invert every emphasis
+    /// span in the bullet and leave an unclosed delimiter, so it must be preserved.
+    /// </summary>
+    private static readonly Regex ListMarker = new(@"^(?:[-•]|\*(?=\s))\s*", RegexOptions.Compiled);
+
     private static IEnumerable<string> SplitBullets(string body) =>
         body.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .Select(l => l.TrimStart('-', '*', ' '))
+            .Select(l => ListMarker.Replace(l, ""))
             .Where(l => l.Length > 0);
 
     /// <summary>Quote a string as a Typst string literal.</summary>

@@ -14,29 +14,43 @@
       <input placeholder="search…" [(ngModel)]="search" (ngModelChange)="reload()">
       <select [(ngModel)]="categoryFilter" (ngModelChange)="reload()">
         <option value="">all categories</option>
-        <option *ngFor="let c of categories" [value]="c">{{ c }}</option>
+        @for (c of categories; track c) {
+          <option [value]="c">{{ c }}</option>
+        }
       </select>
     </div>
 
-    <article class="blurb" *ngFor="let b of blurbs"
-             [class.selected]="selectedBlurbId === b.id" (click)="selectBlurb(b)">
-      <div class="blurb-top">
-        <span class="cat cat-{{b.category}}">{{ b.category }}</span>
-        <strong>{{ b.title }}</strong>
-        <ng-container *ngIf="selectedBlurbId === b.id">
-          <span class="strength" title="strength">{{ '★'.repeat(b.strength) }}</span>
-          <span class="locked" *ngIf="b.locked" title="polished — used verbatim">🔒 locked</span>
-          <span class="secret" *ngIf="b.secrets.length" title="contains a detected secret">🔑 secret</span>
-        </ng-container>
-      </div>
-      <p class="body" *ngIf="selectedBlurbId === b.id">{{ b.body }}</p>
-      <div class="tags"><span class="tag" *ngFor="let t of b.tags">{{ t.name }}</span></div>
-      <div class="blurb-actions" *ngIf="selectedBlurbId === b.id" (click)="$event.stopPropagation()">
-        <button (click)="addToCv(b)" [disabled]="inCv(b) || !activeCv">{{ inCv(b) ? 'in CV' : '+ add to CV' }}</button>
-        <button (click)="edit(b)">edit</button>
-        <button class="danger" (click)="remove(b)">delete</button>
-      </div>
-    </article>
+    @for (b of blurbs; track b.id) {
+      <article class="blurb"
+        [class.selected]="selectedBlurbId === b.id" (click)="selectBlurb(b)">
+        <div class="blurb-top">
+          <span class="cat cat-{{b.category}}">{{ b.category }}</span>
+          <strong>{{ b.title }}</strong>
+          @if (selectedBlurbId === b.id) {
+            <span class="strength" title="strength">{{ '★'.repeat(b.strength) }}</span>
+            @if (b.locked) {
+              <span class="locked" title="polished — used verbatim">🔒 locked</span>
+            }
+            @if (b.secrets.length) {
+              <span class="secret" title="contains a detected secret">🔑 secret</span>
+            }
+          }
+        </div>
+        @if (selectedBlurbId === b.id) {
+          <p class="body">{{ b.body }}</p>
+        }
+        <div class="tags">@for (t of b.tags; track t.id) {
+          <span class="tag">{{ t.name }}</span>
+        }</div>
+        @if (selectedBlurbId === b.id) {
+          <div class="blurb-actions" (click)="$event.stopPropagation()">
+            <button (click)="addToCv(b)" [disabled]="inCv(b) || !activeCv">{{ inCv(b) ? 'in CV' : '+ add to CV' }}</button>
+            <button (click)="edit(b)">edit</button>
+            <button class="danger" (click)="remove(b)">delete</button>
+          </div>
+        }
+      </article>
+    }
   </section>
 
   <!-- CV builder -->
@@ -46,25 +60,35 @@
       <button (click)="newCv()">+ New CV</button>
     </div>
     <select class="cv-select" [ngModel]="activeCv?.id" (ngModelChange)="selectById($event)">
-      <option *ngFor="let c of cvs" [value]="c.id">{{ c.name }}</option>
+      @for (c of cvs; track c.id) {
+        <option [value]="c.id">{{ c.name }}</option>
+      }
     </select>
 
-    <div *ngIf="activeCv">
-      <ol class="items">
-        <li *ngFor="let i of activeCv.items; let idx = index">
-          <span class="cat cat-{{i.category}}">{{ i.category }}</span>
-          <span class="item-title">{{ i.title }}</span>
-          <span class="reorder">
-            <button (click)="move(idx, -1)" [disabled]="idx === 0">↑</button>
-            <button (click)="move(idx, 1)" [disabled]="idx === activeCv.items.length - 1">↓</button>
-            <button class="danger" (click)="removeFromCv(i.blurbId)">✕</button>
-          </span>
-        </li>
-      </ol>
-      <p class="empty" *ngIf="!activeCv.items.length">Add blurbs from the library →</p>
-      <button class="export" (click)="export()" [disabled]="!activeCv.items.length">Export .typ</button>
-      <p class="export-error" *ngIf="exportError">⛔ {{ exportError }}</p>
-    </div>
+    @if (activeCv) {
+      <div>
+        <ol class="items">
+          @for (i of activeCv.items; track i.blurbId; let idx = $index) {
+            <li>
+              <span class="cat cat-{{i.category}}">{{ i.category }}</span>
+              <span class="item-title">{{ i.title }}</span>
+              <span class="reorder">
+                <button (click)="move(idx, -1)" [disabled]="idx === 0">↑</button>
+                <button (click)="move(idx, 1)" [disabled]="idx === activeCv.items.length - 1">↓</button>
+                <button class="danger" (click)="removeFromCv(i.blurbId)">✕</button>
+              </span>
+            </li>
+          }
+        </ol>
+        @if (!activeCv.items.length) {
+          <p class="empty">Add blurbs from the library →</p>
+        }
+        <button class="export" (click)="export()" [disabled]="!activeCv.items.length">Export .typ</button>
+        @if (exportError) {
+          <p class="export-error">⛔ {{ exportError }}</p>
+        }
+      </div>
+    }
   </section>
 
   <!-- Editor -->
@@ -73,26 +97,35 @@
     <label>Title <input [(ngModel)]="editing.title"></label>
     <label>Category
       <select [(ngModel)]="editing.category">
-        <option *ngFor="let c of categories" [value]="c">{{ c }}</option>
+        @for (c of categories; track c) {
+          <option [value]="c">{{ c }}</option>
+        }
       </select>
     </label>
-    <div class="exp-fields" *ngIf="editing.category === 'experience'">
-      <label>Org <input [(ngModel)]="editing.org"></label>
-      <label>Role <input [(ngModel)]="editing.roleTitle"></label>
-      <label>Dates <input [(ngModel)]="editing.dates"></label>
-      <label>Location <input [(ngModel)]="editing.location"></label>
-    </div>
+    @if (editing.category === 'experience') {
+      <div class="exp-fields">
+        <label>Org <input [(ngModel)]="editing.org"></label>
+        <label>Role <input [(ngModel)]="editing.roleTitle"></label>
+        <label>Dates <input [(ngModel)]="editing.dates"></label>
+        <label>Location <input [(ngModel)]="editing.location"></label>
+      </div>
+    }
     <label>Body (one bullet per line)
       <textarea rows="6" [(ngModel)]="editing.body" (ngModelChange)="onBodyChange()"></textarea>
     </label>
 
     <div class="scan" [class.bad]="liveFindings.length" [class.good]="!liveFindings.length && editing.body">
-      <ng-container *ngIf="liveFindings.length; else clean">
+      @if (liveFindings.length) {
         🔑 {{ liveFindings.length }} secret(s):
-        <code *ngFor="let f of liveFindings">{{ f.rule }}:{{ f.preview }}</code>
+        @for (f of liveFindings; track f) {
+          <code>{{ f.rule }}:{{ f.preview }}</code>
+        }
         <button (click)="redact()">redact all</button>
-      </ng-container>
-      <ng-template #clean><span *ngIf="editing.body">✓ no secrets detected</span></ng-template>
+      } @else {
+        @if (editing.body) {
+          <span>✓ no secrets detected</span>
+        }
+      }
     </div>
 
     <label>Tags (comma-separated) <input [(ngModel)]="tagsText"></label>
