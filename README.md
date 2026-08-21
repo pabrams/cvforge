@@ -1,19 +1,16 @@
 # CVForge
 
-A small full-stack tool for assembling tailored CVs from a library of reusable, tagged **blurbs** — write each experience/skill snippet once, then compose CVs by selecting and ordering blurbs, and export straight to **Typst** (feeds an existing `build_docx.py` → `.docx` / `.pdf` pipeline).
+A for creating CVs from a library of reusable blurbs/snippets. Exports to Typst.
 
-**Angular is the primary client and the UI going forward.** The Vue client started as a
-feature-identical twin (the project doubled as a cross-framework reference implementation), but it
-is now kept as a demo/comparison piece and is not maintained at feature parity — new UI features
-land in Angular only.
+Angular is the main client/UI. There is also a Vue client, but it's used only as a demo.
 
 ## Stack
 
 | Layer | Tech |
 |-------|------|
 | Backend | **ASP.NET Core 8 Web API**, C#, **EF Core** (SQLite), **Swagger / OpenAPI** |
-| Client (primary) | **Angular** (standalone components, HttpClient) |
-| Client (demo) | **Vue 3** (`<script setup>`, TypeScript, Vite) — frozen, kept for framework comparison |
+| Client (primary) | **Angular** (standalone components, HttpClient) |c
+| Client (demo) | **Vue 3** (`<script setup>`, TypeScript, Vite) — frozen, kept for framework omparison |
 
 ## Features
 
