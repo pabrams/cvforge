@@ -99,7 +99,7 @@ public class CvsController : ControllerBase
     private static CvDto ToDto(Cv cv) => new(
         cv.Id, cv.Name, cv.Tagline, cv.RoleNotes,
         cv.Items.OrderBy(i => i.Order)
-            .Select(i => new CvItemDto(i.Id, i.BlurbId, i.Order, i.Blurb?.Title ?? "", i.Blurb?.Category ?? ""))
+            .Select(i => new CvItemDto(i.Id, i.BlurbId, i.Order, i.Blurb?.Title ?? "", i.Blurb?.Category ?? "", i.Blurb?.SkillGroup))
             .ToList());
 
     private static string Slug(string s) =>

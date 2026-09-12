@@ -15,15 +15,23 @@ public class BlurbsController : ControllerBase
     public BlurbsController(AppDbContext db, SecretScanner scanner) => (_db, _scanner) = (db, scanner);
 
     [HttpGet]
-    public async Task<IEnumerable<BlurbDto>> Get([FromQuery] string? category, [FromQuery] string? tag, [FromQuery] string? q)
+    public async Task<IEnumerable<BlurbDto>> Get(
+        [FromQuery] string? category, [FromQuery] string? tag, [FromQuery] string? q,
+        [FromQuery] string? group, [FromQuery] bool includeArchived = false)
     {
         var query = _db.Blurbs.Include(b => b.Tags).AsQueryable();
+        if (!includeArchived) query = query.Where(b => !b.Archived);
         if (!string.IsNullOrWhiteSpace(category)) query = query.Where(b => b.Category == category);
+        if (!string.IsNullOrWhiteSpace(group)) query = query.Where(b => b.SkillGroup == group);
         if (!string.IsNullOrWhiteSpace(tag)) query = query.Where(b => b.Tags.Any(t => t.Name == tag));
         if (!string.IsNullOrWhiteSpace(q))
             query = query.Where(b => b.Title.Contains(q) || b.Body.Contains(q));
 
-        var list = await query.OrderByDescending(b => b.Strength).ThenBy(b => b.Title).ToListAsync();
+        // SkillGroup is null for every non-skill category, so they all share one bucket and keep
+        // their strongest-first ordering; atomic skills additionally cluster by rendered line.
+        var list = await query
+            .OrderBy(b => b.SkillGroup ?? "")
+            .ThenByDescending(b => b.Strength).ThenBy(b => b.Title).ToListAsync();
         return list.Select(b => BlurbDto.From(b, _scanner));
     }
 
@@ -76,6 +84,8 @@ public class BlurbsController : ControllerBase
         b.Location = input.Location;
         b.RoleTitle = input.RoleTitle;
         b.Dates = input.Dates;
+        b.SkillGroup = string.IsNullOrWhiteSpace(input.SkillGroup) ? null : input.SkillGroup.Trim();
+        b.Archived = input.Archived;
         b.Strength = Math.Clamp(input.Strength, 0, 5);
         b.PublicSafe = input.PublicSafe && !_scanner.HasSecrets(input.Body);
         b.Locked = input.Locked;

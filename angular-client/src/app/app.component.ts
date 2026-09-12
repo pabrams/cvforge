@@ -5,8 +5,15 @@ import { ApiService, Blurb, BlurbInput, Cv, SecretFinding } from './api.service'
 const EMPTY: BlurbInput = {
   title: '', category: 'experience', body: '',
   org: '', location: '', roleTitle: '', dates: '',
+  skillGroup: '', archived: false,
   strength: 3, publicSafe: false, locked: false, tags: [],
 };
+
+/** One rendered "*Databases:* a · b · c" line's worth of atomic skills. */
+interface SkillGroupRow { group: string; blurbs: Blurb[]; }
+
+/** A CV row: either one blurb, or a whole skill group collapsed into a single line. */
+interface CvRow { group: string | null; label: string; category: string; blurbIds: number[]; }
 
 @Component({
   selector: 'app-root',
@@ -21,8 +28,14 @@ export class AppComponent implements OnInit {
 
   search = '';
   categoryFilter = '';
+  showArchived = false;
   selectedBlurbId: number | null = null;
-  categories = ['summary', 'competencies', 'experience', 'skill', 'qualification', 'education'];
+  categories = ['summary', 'experience', 'project', 'skill', 'qualification', 'education'];
+
+  /** Skill blurbs bucketed by skillGroup, in the order the API returned them. */
+  skillGroups: SkillGroupRow[] = [];
+  /** Everything that isn't an atomic skill, listed one per blurb. */
+  looseBlurbs: Blurb[] = [];
 
   // editor state
   editing: BlurbInput = { ...EMPTY };
@@ -36,8 +49,28 @@ export class AppComponent implements OnInit {
   ngOnInit() { this.reload(); this.loadCvs(); }
 
   reload() {
-    this.api.blurbs({ q: this.search, category: this.categoryFilter })
-      .subscribe(b => this.blurbs = b);
+    this.api.blurbs({ q: this.search, category: this.categoryFilter, includeArchived: this.showArchived })
+      .subscribe(b => { this.blurbs = b; this.regroup(); });
+  }
+
+  /**
+   * Atomic skills are listed under their rendered group rather than as 130-odd separate rows,
+   * so the library reads the way the exported CV does and a whole line can be added at once.
+   * A skill with no group predates atomization and stays a loose row.
+   */
+  private regroup() {
+    const groups = new Map<string, Blurb[]>();
+    this.looseBlurbs = [];
+    for (const b of this.blurbs) {
+      if (b.category === 'skill' && b.skillGroup) {
+        const list = groups.get(b.skillGroup) ?? [];
+        list.push(b);
+        groups.set(b.skillGroup, list);
+      } else {
+        this.looseBlurbs.push(b);
+      }
+    }
+    this.skillGroups = [...groups].map(([group, blurbs]) => ({ group, blurbs }));
   }
 
   loadCvs() {
@@ -61,22 +94,62 @@ export class AppComponent implements OnInit {
 
   inCv(b: Blurb) { return !!this.activeCv?.items.some(i => i.blurbId === b.id); }
 
+  /** How many of a group's skills the active CV already has. */
+  groupInCv(g: SkillGroupRow) { return g.blurbs.filter(b => this.inCv(b)).length; }
+
   addToCv(b: Blurb) {
     if (!this.activeCv || this.inCv(b)) return;
-    const ids = [...this.activeCv.items.map(i => i.blurbId), b.id];
-    this.saveOrder(ids);
+    this.saveOrder([...this.activeCv.items.map(i => i.blurbId), b.id]);
   }
+
+  addGroupToCv(g: SkillGroupRow) {
+    if (!this.activeCv) return;
+    const missing = g.blurbs.filter(b => !this.inCv(b)).map(b => b.id);
+    if (missing.length) this.saveOrder([...this.activeCv.items.map(i => i.blurbId), ...missing]);
+  }
+
   removeFromCv(blurbId: number) {
     if (!this.activeCv) return;
     this.saveOrder(this.activeCv.items.map(i => i.blurbId).filter(id => id !== blurbId));
   }
-  move(idx: number, delta: number) {
+
+  removeRow(row: CvRow) {
     if (!this.activeCv) return;
-    const ids = this.activeCv.items.map(i => i.blurbId);
+    const drop = new Set(row.blurbIds);
+    this.saveOrder(this.activeCv.items.map(i => i.blurbId).filter(id => !drop.has(id)));
+  }
+
+  /**
+   * Rows, not items: a skill group is one row however many atoms it holds, so a CV with 100
+   * items still shows ~20 lines and reordering moves a whole rendered line at a time.
+   */
+  get cvRows(): CvRow[] {
+    const rows: CvRow[] = [];
+    for (const i of this.activeCv?.items ?? []) {
+      const group = i.category === 'skill' ? (i.skillGroup ?? null) : null;
+      const last = rows[rows.length - 1];
+      if (group && last?.group === group) {
+        last.blurbIds.push(i.blurbId);
+        last.label = `${group} (${last.blurbIds.length})`;
+        continue;
+      }
+      rows.push({
+        group,
+        label: group ? `${group} (1)` : i.title,
+        category: i.category,
+        blurbIds: [i.blurbId],
+      });
+    }
+    return rows;
+  }
+
+  moveRow(idx: number, delta: number) {
+    if (!this.activeCv) return;
+    const rows = this.cvRows;
     const j = idx + delta;
-    if (j < 0 || j >= ids.length) return;
-    [ids[idx], ids[j]] = [ids[j], ids[idx]];
-    this.saveOrder(ids);
+    if (j < 0 || j >= rows.length) return;
+    [rows[idx], rows[j]] = [rows[j], rows[idx]];
+    this.saveOrder(rows.flatMap(r => r.blurbIds));
   }
   private saveOrder(ids: number[]) {
     this.exportError = '';
@@ -108,6 +181,7 @@ export class AppComponent implements OnInit {
     this.editing = {
       title: b.title, category: b.category, body: b.body,
       org: b.org, location: b.location, roleTitle: b.roleTitle, dates: b.dates,
+      skillGroup: b.skillGroup ?? '', archived: b.archived,
       strength: b.strength, publicSafe: b.publicSafe, locked: b.locked, tags: b.tags.map(t => t.name),
     };
     this.tagsText = b.tags.map(t => t.name).join(', ');

@@ -1,5 +1,4 @@
 using CvForge.Api.Models;
-using Microsoft.EntityFrameworkCore;
 
 namespace CvForge.Api.Data;
 
@@ -13,6 +12,7 @@ public static class SeedData
     public static void Ensure(AppDbContext db)
     {
         db.Database.EnsureCreated();
+        SchemaPatch.Apply(db);
         if (db.Blurbs.Any()) return;
 
         Tag T(string name, string kind) =>

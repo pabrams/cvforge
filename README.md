@@ -14,7 +14,7 @@ Angular is the main client/UI. There is also a Vue client, but it's used only as
 
 ## Features
 
-- **Blurb library** — reusable CV snippets with category (summary / competencies / experience / skill / qualification / education), Markdown-ish body, many-to-many **tags**, and a self-rated strength. Search + filter. `summary` is the short, human-readable opener; `competencies` is the dense, keyword-rich block aimed at ATS parsers (rendered near the bottom of the CV).
+- **Blurb library** — reusable CV snippets with category (summary / experience / project / skill / qualification / education), Markdown-ish body, many-to-many **tags**, and a self-rated strength. Search + filter. `summary` is the short, human-readable opener — one paragraph of prose, not a keyword block. A `skill` is a *single* skill in plain text (`PostgreSQL`, `C#`) carrying a `skillGroup`; the exporter buckets the selected ones into one `*Databases:* a · b · c` line per group and owns the bold and the Typst escaping. Superseded blurbs are flagged `archived` and hidden from the library, so CVs that already reference them keep exporting unchanged.
 - **CV builder** — a CV is a named, ordered selection of blurbs. Multi-select, reorder, remove.
 - **Typst export** — renders the selected blurbs into a `.typ` that imports the portfolio's shared `template.typ`.
 - **Secret scanning** — a `SecretScanner` service flags likely credentials (AWS/OpenAI/GitHub/Slack keys, JWTs, private keys, `KEY=…` assignments, plus a Shannon-entropy sweep). Findings show live as you type; a blurb can't be marked *public-safe* while it contains a secret, and **export is blocked (HTTP 409)** if any selected blurb still carries one.

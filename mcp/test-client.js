@@ -31,9 +31,15 @@ await call("set_cv_items", { cvId: cv.id, blurbIds: blurbs.map((b) => b.id) });
 const typ = text(await call("export_typst", { cvId: cv.id }));
 console.log(`export_typst → ${typ.split("\n").length} lines, starts: ${typ.slice(0, 34)}…`);
 
+// Skill groups: one group = one rendered skills line.
+const groups = JSON.parse(text(await call("list_skill_groups")));
+const names = Object.keys(groups);
+console.log(`\nlist_skill_groups → ${names.length} groups, e.g. ${names.slice(0, 3).join(", ")}`);
+console.log(`  ${names[0]}: ${groups[names[0]].slice(0, 4).map((s) => s.skill).join(" · ")}…`);
+
 // Draft creation stays unpolished.
-const draft = JSON.parse(text(await call("create_blurb", { title: "AI draft", category: "skill", body: "Some drafted skill line." })));
-console.log(`\ncreate_blurb → id ${draft.id}, locked=${draft.locked}, publicSafe=${draft.publicSafe} (both should be false)`);
+const draft = JSON.parse(text(await call("create_blurb", { title: "AI draft", category: "skill", body: "Some drafted skill", skillGroup: "Databases" })));
+console.log(`\ncreate_blurb → id ${draft.id}, locked=${draft.locked}, publicSafe=${draft.publicSafe} (both should be false), skillGroup=${draft.skillGroup}`);
 
 // Cleanup the test CV + draft.
 await fetch(`http://localhost:5170/api/cvs/${cv.id}`, { method: "DELETE" });

@@ -45,17 +45,37 @@ server.registerTool("search_blurbs",
     description: "Search the reusable blurb library. Returns each blurb's body, category, tags, strength, and — importantly — its `locked` flag. A locked blurb is polished: reproduce its body VERBATIM, never reword it.",
     inputSchema: {
       q: z.string().optional().describe("free-text match on title/body"),
-      category: z.string().optional().describe("summary | experience | skill | qualification | education"),
+      category: z.string().optional().describe("summary | experience | project | skill | qualification | education"),
       tag: z.string().optional().describe("exact tag name, e.g. 'Angular'"),
+      group: z.string().optional().describe("skill group, e.g. 'Databases' — one rendered skills line"),
+      includeArchived: z.boolean().optional().describe("include superseded blurbs; off by default and rarely wanted"),
     },
   },
-  async ({ q, category, tag }) => {
+  async ({ q, category, tag, group, includeArchived }) => {
     const qs = new URLSearchParams();
     if (q) qs.set("q", q);
     if (category) qs.set("category", category);
     if (tag) qs.set("tag", tag);
+    if (group) qs.set("group", group);
+    if (includeArchived) qs.set("includeArchived", "true");
     const r = await api(`/blurbs?${qs}`);
     return r.ok ? ok(r.data) : err(`API ${r.status}`);
+  });
+
+server.registerTool("list_skill_groups",
+  {
+    title: "List skill groups",
+    description: "List the skill groups and the atomic skills in each. One group = one rendered '*Databases:* a · b · c' line in the exported CV. Pick individual skills from these; do not add a whole group by reflex.",
+  },
+  async () => {
+    const r = await api("/blurbs?category=skill");
+    if (!r.ok) return err(`API ${r.status}`);
+    const groups = {};
+    for (const b of r.data) {
+      const g = b.skillGroup || "(ungrouped — legacy)";
+      (groups[g] ??= []).push({ id: b.id, skill: b.body, strength: b.strength, locked: b.locked });
+    }
+    return ok(groups);
   });
 
 server.registerTool("get_blurb",
@@ -67,9 +87,10 @@ server.registerTool("get_blurb",
 
 const blurbFields = {
   title: z.string(),
-  category: z.enum(["summary", "experience", "skill", "qualification", "education"]),
+  category: z.enum(["summary", "experience", "project", "skill", "qualification", "education"]),
   body: z.string(),
-  org: z.string().optional(),
+  skillGroup: z.string().optional().describe("required for category 'skill': the rendered line it joins, e.g. 'Databases'. The body is then ONE skill in plain text — the exporter adds bold and Typst escaping."),
+  org: z.string().optional().describe("for 'experience', the employer; for 'project', the project name"),
   roleTitle: z.string().optional(),
   dates: z.string().optional(),
   location: z.string().optional(),
@@ -89,6 +110,7 @@ server.registerTool("create_blurb",
       body: {
         title: a.title, category: a.category, body: a.body,
         org: a.org, roleTitle: a.roleTitle, dates: a.dates, location: a.location,
+        skillGroup: a.skillGroup, archived: false,
         tags: a.tags ?? [], strength: a.strength ?? 3,
         publicSafe: false, locked: false, // AI output is always an unpolished draft
       },
@@ -115,6 +137,8 @@ server.registerTool("update_blurb",
       roleTitle: patch.roleTitle ?? b.roleTitle,
       dates: patch.dates ?? b.dates,
       location: patch.location ?? b.location,
+      skillGroup: patch.skillGroup ?? b.skillGroup,
+      archived: b.archived,
       tags: patch.tags ?? b.tags.map((t) => t.name),
       strength: patch.strength ?? b.strength,
       publicSafe: false, locked: false, // edited blurb remains an unpolished draft

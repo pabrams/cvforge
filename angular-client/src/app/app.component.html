@@ -18,14 +18,44 @@
           <option [value]="c">{{ c }}</option>
         }
       </select>
+      <label class="archived-toggle" title="superseded blurbs, kept only so older CVs still export">
+        <input type="checkbox" [(ngModel)]="showArchived" (ngModelChange)="reload()"> archived
+      </label>
     </div>
 
-    @for (b of blurbs; track b.id) {
+    @for (g of skillGroups; track g.group) {
+      <div class="skill-group">
+        <div class="skill-group-head">
+          <strong>{{ g.group }}</strong>
+          <span class="count">{{ groupInCv(g) }}/{{ g.blurbs.length }} in CV</span>
+          <button (click)="addGroupToCv(g)"
+            [disabled]="!activeCv || groupInCv(g) === g.blurbs.length">+ add line</button>
+        </div>
+        <div class="atoms">
+          @for (b of g.blurbs; track b.id) {
+            <span class="atom" [class.in-cv]="inCv(b)" [class.archived]="b.archived"
+              [class.strong]="b.strength >= 5">
+              <button class="atom-toggle"
+                [title]="(b.locked ? 'locked — used verbatim' : 'draft — needs polish')
+                         + ' · strength ' + b.strength + (b.strength >= 5 ? ' (renders bold)' : '')"
+                (click)="inCv(b) ? removeFromCv(b.id) : addToCv(b)">{{ b.body }}</button>
+              <button class="atom-edit" title="edit" (click)="edit(b)">✎</button>
+            </span>
+          }
+        </div>
+      </div>
+    }
+
+    @for (b of looseBlurbs; track b.id) {
       <article class="blurb"
-        [class.selected]="selectedBlurbId === b.id" (click)="selectBlurb(b)">
+        [class.selected]="selectedBlurbId === b.id" [class.archived]="b.archived"
+        (click)="selectBlurb(b)">
         <div class="blurb-top">
           <span class="cat cat-{{b.category}}">{{ b.category }}</span>
           <strong>{{ b.title }}</strong>
+          @if (b.archived) {
+            <span class="archived-badge" title="superseded — kept so older CVs still export">archived</span>
+          }
           @if (selectedBlurbId === b.id) {
             <span class="strength" title="strength">{{ '★'.repeat(b.strength) }}</span>
             @if (b.locked) {
@@ -68,14 +98,14 @@
     @if (activeCv) {
       <div>
         <ol class="items">
-          @for (i of activeCv.items; track i.blurbId; let idx = $index) {
+          @for (r of cvRows; track r.label + r.blurbIds[0]; let idx = $index) {
             <li>
-              <span class="cat cat-{{i.category}}">{{ i.category }}</span>
-              <span class="item-title">{{ i.title }}</span>
+              <span class="cat cat-{{r.category}}">{{ r.category }}</span>
+              <span class="item-title">{{ r.label }}</span>
               <span class="reorder">
-                <button (click)="move(idx, -1)" [disabled]="idx === 0">↑</button>
-                <button (click)="move(idx, 1)" [disabled]="idx === activeCv.items.length - 1">↓</button>
-                <button class="danger" (click)="removeFromCv(i.blurbId)">✕</button>
+                <button (click)="moveRow(idx, -1)" [disabled]="idx === 0">↑</button>
+                <button (click)="moveRow(idx, 1)" [disabled]="idx === cvRows.length - 1">↓</button>
+                <button class="danger" (click)="removeRow(r)">✕</button>
               </span>
             </li>
           }
@@ -102,6 +132,19 @@
         }
       </select>
     </label>
+    @if (editing.category === 'skill') {
+      <label>Skill group (the rendered line this belongs to, e.g. "Databases")
+        <input [(ngModel)]="editing.skillGroup" list="skill-groups">
+      </label>
+      <datalist id="skill-groups">
+        @for (g of skillGroups; track g.group) {
+          <option [value]="g.group"></option>
+        }
+      </datalist>
+    }
+    @if (editing.category === 'project') {
+      <label>Project name (rendered in bold before the description) <input [(ngModel)]="editing.org"></label>
+    }
     @if (editing.category === 'experience') {
       <div class="exp-fields">
         <label>Org <input [(ngModel)]="editing.org"></label>
@@ -110,7 +153,9 @@
         <label>Location <input [(ngModel)]="editing.location"></label>
       </div>
     }
-    <label>Body (one bullet per line)
+    <label>
+      {{ editing.category === 'skill' ? 'Body (one skill, plain text — the exporter adds bold and escaping)'
+                                      : 'Body (one bullet per line)' }}
       <textarea rows="6" [(ngModel)]="editing.body" (ngModelChange)="onBodyChange()"></textarea>
     </label>
 
@@ -129,9 +174,13 @@
     </div>
 
     <label>Tags (comma-separated) <input [(ngModel)]="tagsText"></label>
-    <label class="row">Strength <input type="range" min="0" max="5" [(ngModel)]="editing.strength"> {{ editing.strength }}</label>
+    <label class="row" [title]="editing.category === 'skill' ? 'a skill at strength 5 renders bold' : ''">
+      Strength <input type="range" min="0" max="5" [(ngModel)]="editing.strength"> {{ editing.strength }}
+      @if (editing.category === 'skill' && editing.strength >= 5) { <span class="hint">renders bold</span> }
+    </label>
     <label class="row"><input type="checkbox" [(ngModel)]="editing.locked"> 🔒 locked — polished wording, use verbatim (don't let an AI reword)</label>
     <label class="row"><input type="checkbox" [(ngModel)]="editing.publicSafe"> mark public-safe (blocked while secrets present)</label>
+    <label class="row"><input type="checkbox" [(ngModel)]="editing.archived"> archived — superseded, hidden from the library</label>
 
     <div class="editor-actions">
       <button class="primary" (click)="save()" [disabled]="!editing.title">{{ editingId ? 'Save' : 'Create' }}</button>

@@ -30,7 +30,7 @@ button.export { background: #1f4e79; color: #fff; border-color: #1f4e79; width: 
 
 .cat { font-size: .68rem; text-transform: uppercase; padding: .05rem .35rem; border-radius: 3px; background: #eee; color: #555; letter-spacing: .03em; }
 .cat-summary { background: #e7f0ff; color: #1f4e79; }
-.cat-competencies { background: #f3e8ff; color: #6b21a8; }
+.cat-project { background: #f3e8ff; color: #6b21a8; }
 .cat-experience { background: #eaf7ea; color: #2a6e2a; }
 .cat-skill { background: #fff3e0; color: #a15c00; }
 .strength { color: #e6a700; font-size: .8rem; }
@@ -57,3 +57,29 @@ button.export { background: #1f4e79; color: #fff; border-color: #1f4e79; width: 
 .scan.bad { background: #ffe9e9; color: #b00; }
 .scan.good { background: #eaf7ea; color: #2a6e2a; }
 .scan code { display: inline-block; background: #fff; border: 1px solid #f3c2c2; border-radius: 3px; padding: 0 .25rem; margin: 0 .2rem; }
+
+/* ---- atomic skills, grouped the way they render ---- */
+.filters .archived-toggle { display: flex; align-items: center; gap: .25rem; font-size: .75rem; color: #777; white-space: nowrap; }
+.filters .archived-toggle input { width: auto; }
+
+.skill-group { border: 1px solid #eee; border-radius: 6px; padding: .5rem; margin-bottom: .5rem; }
+.skill-group-head { display: flex; align-items: center; gap: .5rem; margin-bottom: .4rem; }
+.skill-group-head strong { font-size: .85rem; color: #a15c00; flex: 1; }
+.skill-group-head .count { font-size: .7rem; color: #999; }
+.skill-group-head button { font-size: .75rem; }
+
+.atoms { display: flex; flex-wrap: wrap; gap: .25rem; }
+.atom { display: inline-flex; align-items: stretch; border: 1px solid #e6d5bb; border-radius: 10px; overflow: hidden; background: #fffaf2; max-width: 100%; }
+.atom button { border: 0; border-radius: 0; background: transparent; font-size: .74rem; padding: .1rem .4rem; text-align: left; }
+.atom .atom-toggle { flex: 1; min-width: 0; }
+.atom .atom-edit { color: #aaa; padding: .1rem .25rem; border-left: 1px solid #f0e4d2; }
+.atom:hover { border-color: #c99b4e; }
+.atom.strong .atom-toggle { font-weight: 700; }
+.atom.in-cv { background: #1f4e79; border-color: #1f4e79; }
+.atom.in-cv button { color: #fff; }
+.atom.in-cv .atom-edit { border-left-color: #4d7aa3; color: #bcd4ea; }
+.atom.archived { opacity: .55; text-decoration: line-through; }
+
+.blurb.archived { opacity: .6; }
+.archived-badge { font-size: .68rem; color: #777; background: #eee; padding: .05rem .35rem; border-radius: 3px; }
+.editor .hint { font-size: .7rem; color: #a15c00; white-space: nowrap; }

@@ -9,14 +9,19 @@ export interface Tag { id: number; name: string; kind: string; }
 export interface Blurb {
   id: number; title: string; category: string; body: string;
   org?: string; location?: string; roleTitle?: string; dates?: string;
+  skillGroup?: string | null; archived: boolean;
   strength: number; publicSafe: boolean; locked: boolean; tags: Tag[]; secrets: SecretFinding[];
 }
 export interface BlurbInput {
   title: string; category: string; body: string;
   org?: string; location?: string; roleTitle?: string; dates?: string;
+  skillGroup?: string | null; archived: boolean;
   strength: number; publicSafe: boolean; locked: boolean; tags: string[];
 }
-export interface CvItem { id: number; blurbId: number; order: number; title: string; category: string; }
+export interface CvItem {
+  id: number; blurbId: number; order: number; title: string; category: string;
+  skillGroup?: string | null;
+}
 export interface Cv { id: number; name: string; tagline: string; roleNotes: string; items: CvItem[]; }
 export interface ScanResult { findings: SecretFinding[]; redacted: string; clean: boolean; }
 
@@ -24,11 +29,14 @@ export interface ScanResult { findings: SecretFinding[]; redacted: string; clean
 export class ApiService {
   constructor(private http: HttpClient) {}
 
-  blurbs(params: { category?: string; tag?: string; q?: string } = {}): Observable<Blurb[]> {
+  blurbs(params: { category?: string; tag?: string; q?: string; group?: string; includeArchived?: boolean } = {})
+    : Observable<Blurb[]> {
     const qs = new URLSearchParams();
     if (params.category) qs.set('category', params.category);
     if (params.tag) qs.set('tag', params.tag);
     if (params.q) qs.set('q', params.q);
+    if (params.group) qs.set('group', params.group);
+    if (params.includeArchived) qs.set('includeArchived', 'true');
     return this.http.get<Blurb[]>(`${API_BASE}/blurbs?${qs}`);
   }
   createBlurb(b: BlurbInput) { return this.http.post<Blurb>(`${API_BASE}/blurbs`, b); }

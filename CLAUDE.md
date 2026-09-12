@@ -6,8 +6,8 @@ CVForge is a blurb library + CV builder. You assemble tailored CVs from reusable
 ## How to reach the data
 
 The `cvforge` MCP server (configured in `.mcp.json`) exposes the blurb library and CV builder as
-tools: `search_blurbs`, `get_blurb`, `create_blurb`, `update_blurb`, `list_cvs`, `create_cv`,
-`set_cv_items`, `export_typst`, `scan_secrets`, `list_tags`.
+tools: `search_blurbs`, `list_skill_groups`, `get_blurb`, `create_blurb`, `update_blurb`,
+`list_cvs`, `create_cv`, `set_cv_items`, `export_typst`, `scan_secrets`, `list_tags`.
 
 **The API must be running** for those tools to work:
 
@@ -44,14 +44,37 @@ data under `/api/...`. The web UI is a separate SPA: `cd vue-client && npm run d
 
 ## Typical flow
 
-Paste a job posting → `search_blurbs` by category/tag to find relevant material → assemble the CV
-(summary → experience → skills → competencies, strongest first) from **locked** blurbs verbatim →
-draft only what's genuinely missing (flagged) → `create_cv` + `set_cv_items` → `export_typst`.
-Report what you used and what still needs the user's polish.
+Paste a job posting → `search_blurbs` by category/tag and `list_skill_groups` for the skills →
+assemble the CV (summary → experience → skills → projects → qualifications / education, strongest
+first) from **locked** blurbs verbatim → draft only what's genuinely missing (flagged) →
+`create_cv` + `set_cv_items` → `export_typst`. Report what you used and what still needs polish.
 
-Category semantics: `summary` = short, human-readable opener (one per CV, at the top);
-`competencies` = dense keyword-rich ATS block (rendered at the bottom). Don't put keyword walls
-in `summary`.
+### Categories
+
+| category | what it is | how it renders |
+| --- | --- | --- |
+| `summary` | the human-readable opener — **one paragraph, two at most**, prose | "Professional Summary". Exactly one per CV. |
+| `experience` | one role, bullets in `body` (one per line) | "Professional Experience", using `org` / `roleTitle` / `dates` / `location`. |
+| `project` | one project; `org` is its name, `body` the description | "Projects & Open Source". |
+| `skill` | **one** skill, plain text, with a `skillGroup` | grouped into one "*Databases:* a · b · c" line per group. |
+| `qualification` | a certification or award | "Certifications & Awards", joined with " · ". |
+| `education` | a degree | "Education". |
+
+There is no `competencies` category. The dense ATS keyword block it used to hold is archived —
+that shape of writing is what pushed the summaries into keyword walls in the first place.
+
+### Skills are atomic
+
+A skill blurb is **one** skill ("PostgreSQL", "Docker", "C#") in **plain text**, with a
+`skillGroup` naming the line it joins. The exporter owns the formatting: it adds the bold (a skill
+at `strength` 5 renders bold), the " · " separators, and the Typst escaping. Don't put `*bold*` or
+`C\#` in a skill body — it will be escaped literally.
+
+Pick the atoms a posting calls for. Adding every atom in a group by reflex just rebuilds the
+keyword wall in a new place.
+
+Skills with no `skillGroup`, and anything flagged `archived`, predate this and are kept only so
+older CVs still export unchanged. Don't select them for new CVs.
 
 UI note: the Angular client (`angular-client/`, port 4200) is the primary UI — new features go
 there only. The Vue client is a frozen demo.
@@ -64,7 +87,9 @@ See `.claude/skills/cvforge/SKILL.md` for the step-by-step.
 `export_typst` output next to the other CVs in `../pabrams.github.io/cv/` (it imports `template.typ`
 from there) and run `typst compile <file>.typ`.
 
-Known issue: `export_typst` output is not Typst-escaped. In markup, escape `C#` → `C\#` and
-`~` → `\~` (a bare `~` is a non-breaking space and vanishes); inside quoted strings like `tagline:`,
+Escaping: `skill` bodies are plain text and the exporter escapes them, so write `C#`, not `C\#`.
+Everywhere else — `summary`, `experience`, `project` bodies — the body **is** Typst markup and
+passes through untouched, so escape by hand there: `C#` → `C\#`, `~` → `\~` (a bare `~` is a
+non-breaking space and vanishes), `#` → `\#`, `@` → `\@`. Inside quoted strings like `tagline:`,
 do **not** escape. For ATS-bound submissions prefer the `.docx` route
 (`../pabrams.github.io/cv/build_docx.py` — Typst PDFs embed fonts some parsers can't read).
