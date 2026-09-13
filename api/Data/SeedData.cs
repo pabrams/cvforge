@@ -35,7 +35,7 @@ public static class SeedData
                 Title = "Senior full-stack summary",
                 Category = "summary",
                 Body = "Senior full-stack developer with 15+ years across the full SDLC, shipping web-based enterprise applications from front-end UI through service back ends and relational databases.",
-                Strength = 5, PublicSafe = true, Locked = true,
+                Strength = 5, PublicSafe = true, Draft = false,
                 Tags = new() { csharp, dotnet, azure },
             },
             new()
@@ -46,7 +46,7 @@ public static class SeedData
                 Location = "Gatineau, QC", Dates = "December 2021 – July 2025",
                 RoleTitle = "Senior Software Developer — Cloud-Native Microservices",
                 Body = "Enhanced and maintained a cloud-native microservices onboarding application (.NET Core / C#, Blazor, Azure SQL, Azure Functions).\nDesigned and consumed REST APIs between services, documented with Swagger and governed through Azure API Management.\nMigrated downstream identity to Azure Managed Identities, eliminating the secret-rotation incident class.",
-                Strength = 5, PublicSafe = true, Locked = true,
+                Strength = 5, PublicSafe = true, Draft = false,
                 Tags = new() { csharp, dotnet, azure, sql },
             },
             new()
@@ -57,7 +57,7 @@ public static class SeedData
                 Location = "Ottawa, ON", Dates = "October 2008 – April 2014",
                 RoleTitle = "Full-Stack Developer — Legal Case Management System (iCase)",
                 Body = "Core developer on a distributed, multi-tier ASP.NET / C# enterprise platform used by 5,000+ government lawyers nationally.\nOptimized a high-traffic backend report for a ~50x speedup via execution-plan analysis.\nMigrated core business modules from VB.NET to C#.",
-                Strength = 4, PublicSafe = true, Locked = true,
+                Strength = 4, PublicSafe = true, Draft = false,
                 Tags = new() { csharp, dotnet, sql },
             },
             new()
@@ -65,7 +65,7 @@ public static class SeedData
                 Title = "Front-end frameworks skill line",
                 Category = "skill",
                 Body = "*Front-End:* JavaScript, TypeScript, HTML / CSS, React, Angular, Vue, Blazor, Knockout.js — responsive, WCAG AA / AODA accessible.",
-                Strength = 3, PublicSafe = true, Locked = true,
+                Strength = 3, PublicSafe = true, Draft = false,
                 Tags = new() { angular, vue },
             },
             new()

@@ -26,14 +26,16 @@ data under `/api/...`. The web UI is a separate SPA: `cd vue-client && npm run d
 
 ## The rules (non-negotiable)
 
-1. **Locked blurbs are verbatim.** A blurb with `locked: true` is the user's polished wording.
-   Select and order it; **never reword, summarize, or "improve" it.** (`update_blurb` will refuse
-   to edit a locked blurb — that's by design, not an error to work around.)
+1. **Non-draft blurbs are verbatim.** The `draft` flag is provenance: `draft: false` means the
+   wording is the user's own — select and order it; **never reword, summarize, or "improve"
+   it.** (`update_blurb` will refuse to edit a non-draft blurb — that's by design, not an error
+   to work around.) `draft: true` means AI-authored and not yet reviewed; saving a blurb in the
+   web UI clears the flag, because a human just made the wording theirs.
 
 2. **Draft only for genuine gaps.** If no blurb covers a point the posting requires, use
-   `create_blurb` to add an *unpolished draft* (it's saved `locked: false`, not public-safe). Then
-   **tell the user exactly which blurbs are drafts they need to polish.** Don't paraphrase an
-   existing locked blurb into a "new" one to dodge rule 1.
+   `create_blurb` to add one (it's saved `draft: true`, not public-safe — the MCP tools can
+   never mint reviewed wording). Then **tell the user exactly which blurbs are drafts they need
+   to polish.** Don't paraphrase an existing non-draft blurb into a "new" one to dodge rule 1.
 
 3. **Never fabricate experience.** Only claim what the blurbs actually evidence. If the posting
    needs something the user doesn't have, say so plainly — don't invent it. Framing genuine
@@ -46,7 +48,7 @@ data under `/api/...`. The web UI is a separate SPA: `cd vue-client && npm run d
 
 Paste a job posting → `search_blurbs` by category/tag and `list_skill_groups` for the skills →
 assemble the CV (summary → experience → skills → projects → qualifications / education, strongest
-first) from **locked** blurbs verbatim → draft only what's genuinely missing (flagged) →
+first) from **non-draft** blurbs verbatim → draft only what's genuinely missing (flagged) →
 `create_cv` + `set_cv_items` → `export_typst`. Report what you used and what still needs polish.
 
 ### Categories

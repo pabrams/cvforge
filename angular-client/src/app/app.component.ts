@@ -6,7 +6,7 @@ const EMPTY: BlurbInput = {
   title: '', category: 'experience', body: '',
   org: '', location: '', roleTitle: '', dates: '',
   skillGroup: '', archived: false,
-  strength: 3, publicSafe: false, locked: false, tags: [],
+  strength: 3, publicSafe: false, draft: false, tags: [],
 };
 
 /** One rendered "*Databases:* a · b · c" line's worth of atomic skills. */
@@ -43,6 +43,8 @@ export class AppComponent implements OnInit {
   tagsText = '';
   liveFindings: SecretFinding[] = [];
   exportError = '';
+  /** True once the user has ticked/unticked "draft" by hand; typing then no longer overrides it. */
+  private draftChosen = false;
 
   constructor(private api: ApiService) {}
 
@@ -182,14 +184,27 @@ export class AppComponent implements OnInit {
       title: b.title, category: b.category, body: b.body,
       org: b.org, location: b.location, roleTitle: b.roleTitle, dates: b.dates,
       skillGroup: b.skillGroup ?? '', archived: b.archived,
-      strength: b.strength, publicSafe: b.publicSafe, locked: b.locked, tags: b.tags.map(t => t.name),
+      strength: b.strength, publicSafe: b.publicSafe, draft: b.draft, tags: b.tags.map(t => t.name),
     };
     this.tagsText = b.tags.map(t => t.name).join(', ');
     this.liveFindings = b.secrets;
+    this.draftChosen = false;
   }
-  newBlurb() { this.editingId = null; this.editing = { ...EMPTY }; this.tagsText = ''; this.liveFindings = []; }
+  newBlurb() {
+    this.editingId = null; this.editing = { ...EMPTY }; this.tagsText = ''; this.liveFindings = [];
+    this.draftChosen = false;
+  }
+
+  /**
+   * A human rewording what renders on the CV (body, org, role, dates, location) makes it theirs:
+   * untick draft live, visibly, before saving — unless they set the checkbox by hand this session.
+   * Internal metadata (title, tags, strength, skill group) and "redact all" don't claim authorship.
+   */
+  markEdited() { if (!this.draftChosen) this.editing.draft = false; }
+  setDraft(draft: boolean) { this.editing.draft = draft; this.draftChosen = true; }
 
   onBodyChange() {
+    this.markEdited();
     this.api.scan(this.editing.body).subscribe(r => this.liveFindings = r.findings);
   }
   redact() {

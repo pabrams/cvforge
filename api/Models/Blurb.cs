@@ -44,10 +44,12 @@ public class Blurb
     public bool PublicSafe { get; set; }
 
     /// <summary>
-    /// True = polished/final wording. An assembling agent must reproduce the body verbatim and
-    /// never reword it; it may only select and order the blurb. False = a draft that may still be edited.
+    /// Provenance, not permission: true = AI-authored wording the user hasn't reviewed yet.
+    /// False = the user's own wording — an assembling agent must reproduce the body verbatim,
+    /// never reword it; it may only select and order the blurb. The MCP tools always save
+    /// true; the web UI clears it on save (a human just edited it, so it's their wording).
     /// </summary>
-    public bool Locked { get; set; }
+    public bool Draft { get; set; }
 
     public List<Tag> Tags { get; set; } = new();
 }

@@ -4,10 +4,11 @@
 // so all business logic (secret scanning, Typst export) lives in one place.
 //
 // Guardrails baked in here (not just in prompting):
-//   • create_blurb / update_blurb always produce DRAFTS (locked = false). The AI
-//     never mints a "polished" blurb — only a human does, in the app.
-//   • update_blurb REFUSES to touch a locked blurb. Locked = verbatim; the AI may
-//     select and order it, never reword it.
+//   • The `draft` flag is provenance: true = AI-authored, unreviewed. create_blurb /
+//     update_blurb always save draft = true — the AI never mints reviewed wording;
+//     a blurb sheds the flag only when a human saves it in the app.
+//   • update_blurb REFUSES to touch a non-draft blurb. Not-draft = the user's own
+//     wording; the AI may select and order it, never reword it.
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
@@ -42,7 +43,7 @@ server.registerTool("list_tags",
 server.registerTool("search_blurbs",
   {
     title: "Search blurbs",
-    description: "Search the reusable blurb library. Returns each blurb's body, category, tags, strength, and — importantly — its `locked` flag. A locked blurb is polished: reproduce its body VERBATIM, never reword it.",
+    description: "Search the reusable blurb library. Returns each blurb's body, category, tags, strength, and — importantly — its `draft` flag. `draft: false` means the wording is the user's own: reproduce it VERBATIM, never reword it. `draft: true` means AI-authored and awaiting the user's polish.",
     inputSchema: {
       q: z.string().optional().describe("free-text match on title/body"),
       category: z.string().optional().describe("summary | experience | project | skill | qualification | education"),
@@ -73,7 +74,7 @@ server.registerTool("list_skill_groups",
     const groups = {};
     for (const b of r.data) {
       const g = b.skillGroup || "(ungrouped — legacy)";
-      (groups[g] ??= []).push({ id: b.id, skill: b.body, strength: b.strength, locked: b.locked });
+      (groups[g] ??= []).push({ id: b.id, skill: b.body, strength: b.strength, draft: b.draft });
     }
     return ok(groups);
   });
@@ -101,7 +102,7 @@ const blurbFields = {
 server.registerTool("create_blurb",
   {
     title: "Create a draft blurb",
-    description: "Create a NEW blurb. It is always saved as an unpolished DRAFT (locked = false, not public-safe) for the user to review and polish. Use this only when no existing blurb covers a required point — never to paraphrase a locked blurb.",
+    description: "Create a NEW blurb. It is always saved as a DRAFT (draft = true, not public-safe) for the user to review and polish. Use this only when no existing blurb covers a required point — never to paraphrase a non-draft blurb.",
     inputSchema: blurbFields,
   },
   async (a) => {
@@ -112,7 +113,7 @@ server.registerTool("create_blurb",
         org: a.org, roleTitle: a.roleTitle, dates: a.dates, location: a.location,
         skillGroup: a.skillGroup, archived: false,
         tags: a.tags ?? [], strength: a.strength ?? 3,
-        publicSafe: false, locked: false, // AI output is always an unpolished draft
+        publicSafe: false, draft: true, // AI output is always an unpolished draft
       },
     });
     return r.ok ? ok(r.data) : err(`API ${r.status}: ${JSON.stringify(r.data)}`);
@@ -121,14 +122,14 @@ server.registerTool("create_blurb",
 server.registerTool("update_blurb",
   {
     title: "Update a draft blurb",
-    description: "Edit an existing DRAFT blurb (merges provided fields). REFUSES to modify a locked blurb — locked wording is the user's and must be used verbatim. Any edit stays a draft.",
+    description: "Edit an existing DRAFT blurb (merges provided fields). REFUSES to modify a non-draft blurb — that wording is the user's and must be used verbatim. Any edit stays a draft.",
     inputSchema: { id: z.number().int(), ...Object.fromEntries(Object.entries(blurbFields).map(([k, v]) => [k, v.optional()])) },
   },
   async ({ id, ...patch }) => {
     const cur = await api(`/blurbs/${id}`);
     if (!cur.ok) return err(`Blurb ${id} not found (API ${cur.status})`);
     const b = cur.data;
-    if (b.locked) return err(`Blurb ${id} ("${b.title}") is LOCKED — polished wording that must be used verbatim. The AI may not edit it. Ask the user to unlock it in the app if a change is genuinely needed.`);
+    if (!b.draft) return err(`Blurb ${id} ("${b.title}") is not a draft — it is the user's own wording and must be used verbatim. The AI may not edit it. Ask the user to mark it a draft in the app if a change is genuinely needed.`);
     const merged = {
       title: patch.title ?? b.title,
       category: patch.category ?? b.category,
@@ -141,7 +142,7 @@ server.registerTool("update_blurb",
       archived: b.archived,
       tags: patch.tags ?? b.tags.map((t) => t.name),
       strength: patch.strength ?? b.strength,
-      publicSafe: false, locked: false, // edited blurb remains an unpolished draft
+      publicSafe: false, draft: true, // edited blurb remains an unpolished draft
     };
     const r = await api(`/blurbs/${id}`, { method: "PUT", body: merged });
     return r.ok ? ok(r.data) : err(`API ${r.status}: ${JSON.stringify(r.data)}`);

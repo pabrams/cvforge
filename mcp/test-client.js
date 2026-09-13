@@ -1,5 +1,5 @@
 // Smoke test: spawn the MCP server over stdio, list tools, and exercise the
-// key flows (search → build CV → export) plus the locked-blurb guardrail.
+// key flows (search → build CV → export) plus the non-draft (verbatim) guardrail.
 // Requires the CVForge API running on http://localhost:5170.
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
@@ -16,15 +16,15 @@ console.log("TOOLS:", tools.map((t) => t.name).join(", "));
 
 const blurbs = JSON.parse(text(await call("search_blurbs", { category: "experience" })));
 console.log(`\nsearch_blurbs(experience): ${blurbs.length} found`);
-const locked = blurbs.find((b) => b.locked);
-console.log(`  locked example: "${locked.title}" (id ${locked.id})`);
+const verbatim = blurbs.find((b) => !b.draft);
+console.log(`  non-draft example: "${verbatim.title}" (id ${verbatim.id})`);
 
-// Guardrail: AI must not edit a locked blurb.
-const editLocked = await call("update_blurb", { id: locked.id, body: "REWORDED BY AI" });
-console.log(`\nupdate_blurb on locked → isError=${editLocked.isError}`);
-console.log("  " + text(editLocked).slice(0, 90) + "…");
+// Guardrail: AI must not edit a non-draft blurb (the user's own wording).
+const editVerbatim = await call("update_blurb", { id: verbatim.id, body: "REWORDED BY AI" });
+console.log(`\nupdate_blurb on non-draft → isError=${editVerbatim.isError}`);
+console.log("  " + text(editVerbatim).slice(0, 90) + "…");
 
-// Build a CV from locked blurbs and export.
+// Build a CV from the experience blurbs and export.
 const cv = JSON.parse(text(await call("create_cv", { name: "MCP Test CV", tagline: "test" })));
 console.log(`\ncreate_cv → id ${cv.id}`);
 await call("set_cv_items", { cvId: cv.id, blurbIds: blurbs.map((b) => b.id) });
@@ -39,7 +39,7 @@ console.log(`  ${names[0]}: ${groups[names[0]].slice(0, 4).map((s) => s.skill).j
 
 // Draft creation stays unpolished.
 const draft = JSON.parse(text(await call("create_blurb", { title: "AI draft", category: "skill", body: "Some drafted skill", skillGroup: "Databases" })));
-console.log(`\ncreate_blurb → id ${draft.id}, locked=${draft.locked}, publicSafe=${draft.publicSafe} (both should be false), skillGroup=${draft.skillGroup}`);
+console.log(`\ncreate_blurb → id ${draft.id}, draft=${draft.draft} (should be true), publicSafe=${draft.publicSafe} (should be false), skillGroup=${draft.skillGroup}`);
 
 // Cleanup the test CV + draft.
 await fetch(`http://localhost:5170/api/cvs/${cv.id}`, { method: "DELETE" });

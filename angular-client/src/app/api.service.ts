@@ -10,13 +10,13 @@ export interface Blurb {
   id: number; title: string; category: string; body: string;
   org?: string; location?: string; roleTitle?: string; dates?: string;
   skillGroup?: string | null; archived: boolean;
-  strength: number; publicSafe: boolean; locked: boolean; tags: Tag[]; secrets: SecretFinding[];
+  strength: number; publicSafe: boolean; draft: boolean; tags: Tag[]; secrets: SecretFinding[];
 }
 export interface BlurbInput {
   title: string; category: string; body: string;
   org?: string; location?: string; roleTitle?: string; dates?: string;
   skillGroup?: string | null; archived: boolean;
-  strength: number; publicSafe: boolean; locked: boolean; tags: string[];
+  strength: number; publicSafe: boolean; draft: boolean; tags: string[];
 }
 export interface CvItem {
   id: number; blurbId: number; order: number; title: string; category: string;

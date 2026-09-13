@@ -1,6 +1,6 @@
 ---
 name: cvforge
-description: Assemble a tailored CV from the CVForge blurb library for a specific job posting. Use when the user pastes a posting and wants a CV, or asks to build/tailor a CV. Selects and orders existing blurbs (locked ones verbatim), drafts only genuine gaps, and exports Typst. Requires the CVForge API running and the `cvforge` MCP server.
+description: Assemble a tailored CV from the CVForge blurb library for a specific job posting. Use when the user pastes a posting and wants a CV, or asks to build/tailor a CV. Selects and orders existing blurbs (non-draft ones verbatim), drafts only genuine gaps, and exports Typst. Requires the CVForge API running and the `cvforge` MCP server.
 ---
 
 # Assemble a CV from the blurb library
@@ -16,12 +16,13 @@ the API isn't running (`cd api && ASPNETCORE_URLS=http://localhost:5170 dotnet r
 
 2. **Gather candidate blurbs.** Use `search_blurbs` — by `category` (summary / experience /
    project / skill / qualification / education) and by `tag` (e.g. a required technology). Read
-   each result's `body`, `strength`, `tags`, and `locked` flag. Prefer higher `strength`.
+   each result's `body`, `strength`, `tags`, and `draft` flag. Prefer higher `strength`.
    For skills, use `list_skill_groups`: each group is one rendered "*Databases:* a · b · c" line,
    and each entry in it is one atomic skill you select individually.
 
 3. **Map requirements → blurbs.** For each key requirement, find the blurb(s) that evidence it.
-   - A blurb with `locked: true` → use its body **verbatim**. Do not reword it.
+   - A blurb with `draft: false` is the user's own wording → use its body **verbatim**. Do not
+     reword it. (`draft: true` = AI-authored and unreviewed — the only kind you may edit.)
    - Track which requirements have **no** covering blurb. Those are gaps.
 
 4. **Handle gaps honestly.**
@@ -46,13 +47,13 @@ the API isn't running (`cd api && ASPNETCORE_URLS=http://localhost:5170 dotnet r
    which blurb to redact and stop — don't try to route around it.
 
 7. **Report back.** Tell the user:
-   - which blurbs you used (and that locked ones are verbatim),
+   - which blurbs you used (and that non-draft ones are verbatim),
    - **exactly which blurbs are drafts they need to polish**,
    - any posting requirement you couldn't cover, stated plainly.
 
 ## Don'ts
 
-- Don't reword, summarize, or "tighten" a locked blurb.
+- Don't reword, summarize, or "tighten" a non-draft blurb.
 - Don't write a keyword-dense summary. The summary is prose for a human reader — one paragraph,
   two at the very most. Technologies belong in the skills section, evidence in the experience
   bullets.

@@ -36,7 +36,7 @@
             <span class="atom" [class.in-cv]="inCv(b)" [class.archived]="b.archived"
               [class.strong]="b.strength >= 5">
               <button class="atom-toggle"
-                [title]="(b.locked ? 'locked — used verbatim' : 'draft — needs polish')
+                [title]="(b.draft ? 'draft — AI-authored, needs polish' : 'your wording — used verbatim')
                          + ' · strength ' + b.strength + (b.strength >= 5 ? ' (renders bold)' : '')"
                 (click)="inCv(b) ? removeFromCv(b.id) : addToCv(b)">{{ b.body }}</button>
               <button class="atom-edit" title="edit" (click)="edit(b)">✎</button>
@@ -56,11 +56,11 @@
           @if (b.archived) {
             <span class="archived-badge" title="superseded — kept so older CVs still export">archived</span>
           }
+          @if (b.draft) {
+            <span class="draft-badge" title="AI-authored, unreviewed — saving your own edit clears this">draft</span>
+          }
           @if (selectedBlurbId === b.id) {
             <span class="strength" title="strength">{{ '★'.repeat(b.strength) }}</span>
-            @if (b.locked) {
-              <span class="locked" title="polished — used verbatim">🔒 locked</span>
-            }
             @if (b.secrets.length) {
               <span class="secret" title="contains a detected secret">🔑 secret</span>
             }
@@ -143,14 +143,15 @@
       </datalist>
     }
     @if (editing.category === 'project') {
-      <label>Project name (rendered in bold before the description) <input [(ngModel)]="editing.org"></label>
+      <label>Project name (rendered in bold before the description)
+        <input [(ngModel)]="editing.org" (ngModelChange)="markEdited()"></label>
     }
     @if (editing.category === 'experience') {
       <div class="exp-fields">
-        <label>Org <input [(ngModel)]="editing.org"></label>
-        <label>Role <input [(ngModel)]="editing.roleTitle"></label>
-        <label>Dates <input [(ngModel)]="editing.dates"></label>
-        <label>Location <input [(ngModel)]="editing.location"></label>
+        <label>Org <input [(ngModel)]="editing.org" (ngModelChange)="markEdited()"></label>
+        <label>Role <input [(ngModel)]="editing.roleTitle" (ngModelChange)="markEdited()"></label>
+        <label>Dates <input [(ngModel)]="editing.dates" (ngModelChange)="markEdited()"></label>
+        <label>Location <input [(ngModel)]="editing.location" (ngModelChange)="markEdited()"></label>
       </div>
     }
     <label>
@@ -178,9 +179,12 @@
       Strength <input type="range" min="0" max="5" [(ngModel)]="editing.strength"> {{ editing.strength }}
       @if (editing.category === 'skill' && editing.strength >= 5) { <span class="hint">renders bold</span> }
     </label>
-    <label class="row"><input type="checkbox" [(ngModel)]="editing.locked"> 🔒 locked — polished wording, use verbatim (don't let an AI reword)</label>
-    <label class="row"><input type="checkbox" [(ngModel)]="editing.publicSafe"> mark public-safe (blocked while secrets present)</label>
-    <label class="row"><input type="checkbox" [(ngModel)]="editing.archived"> archived — superseded, hidden from the library</label>
+    <label class="row" title="AI-authored, unreviewed — editing the rendered wording unticks this automatically (tick or untick it yourself and your choice sticks); unticked = your wording, used verbatim, no AI edits">
+      <input type="checkbox" [ngModel]="editing.draft" (ngModelChange)="setDraft($event)"> draft</label>
+    <label class="row" title="confirmed free of secrets — can't be set while one is detected">
+      <input type="checkbox" [(ngModel)]="editing.publicSafe"> public-safe</label>
+    <label class="row" title="superseded — hidden from the library, kept so older CVs still export">
+      <input type="checkbox" [(ngModel)]="editing.archived"> archived</label>
 
     <div class="editor-actions">
       <button class="primary" (click)="save()" [disabled]="!editing.title">{{ editingId ? 'Save' : 'Create' }}</button>

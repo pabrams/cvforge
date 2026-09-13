@@ -88,7 +88,7 @@ public class BlurbsController : ControllerBase
         b.Archived = input.Archived;
         b.Strength = Math.Clamp(input.Strength, 0, 5);
         b.PublicSafe = input.PublicSafe && !_scanner.HasSecrets(input.Body);
-        b.Locked = input.Locked;
+        b.Draft = input.Draft;
     }
 
     private async Task<List<Tag>> ResolveTags(List<string>? names)
