@@ -30,6 +30,7 @@ export class AppComponent implements OnInit {
   categoryFilter = '';
   showArchived = false;
   selectedBlurbId: number | null = null;
+  rightTab: 'builder' | 'editor' = 'builder';
   categories = ['summary', 'experience', 'project', 'skill', 'qualification', 'education'];
 
   /** Skill blurbs bucketed by skillGroup, in the order the API returned them. */
@@ -83,7 +84,12 @@ export class AppComponent implements OnInit {
     });
   }
 
-  selectBlurb(b: Blurb) { this.selectedBlurbId = this.selectedBlurbId === b.id ? null : b.id; }
+  /** One click both expands the row and loads it into the editor; a second click just collapses. */
+  selectBlurb(b: Blurb) {
+    if (this.selectedBlurbId === b.id) { this.selectedBlurbId = null; return; }
+    this.selectedBlurbId = b.id;
+    this.edit(b);
+  }
 
   select(cv: Cv) { this.exportError = ''; this.activeCv = cv; }
   selectById(id: number) { const cv = this.cvs.find(c => c.id === +id); if (cv) this.select(cv); }
@@ -179,6 +185,7 @@ export class AppComponent implements OnInit {
 
   // ---- editor ----
   edit(b: Blurb) {
+    this.rightTab = 'editor';
     this.editingId = b.id;
     this.editing = {
       title: b.title, category: b.category, body: b.body,
@@ -191,6 +198,7 @@ export class AppComponent implements OnInit {
     this.draftChosen = false;
   }
   newBlurb() {
+    this.rightTab = 'editor';
     this.editingId = null; this.editing = { ...EMPTY }; this.tagsText = ''; this.liveFindings = [];
     this.draftChosen = false;
   }
@@ -220,6 +228,15 @@ export class AppComponent implements OnInit {
   }
   remove(b: Blurb) {
     if (!confirm(`Delete "${b.title}"?`)) return;
-    this.api.deleteBlurb(b.id).subscribe(() => this.reload());
+    this.api.deleteBlurb(b.id).subscribe(() => {
+      // Selecting a blurb loads it into the editor, so deleting the loaded one would leave the
+      // editor pointing at a dead id (its next save would 404).
+      if (this.editingId === b.id) {
+        this.editingId = null; this.editing = { ...EMPTY }; this.tagsText = ''; this.liveFindings = [];
+        this.draftChosen = false;
+      }
+      if (this.selectedBlurbId === b.id) this.selectedBlurbId = null;
+      this.reload();
+    });
   }
 }
