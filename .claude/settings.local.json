@@ -40,7 +40,12 @@
       "Bash(npm run *)",
       "Skill(update-config)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5170/api/blurbs)",
-      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:4200/)"
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:4200/)",
+      "Read(//home/i/repos/cvf-a/angular-client/**)",
+      "Bash(pnpm i *)",
+      "Bash(pnpm build *)",
+      "Bash(curl -s http://localhost:5170/api/cvs)",
+      "Bash(curl -si http://localhost:5170/api/cvs/1/export.typ)"
     ]
   },
   "enabledMcpjsonServers": [

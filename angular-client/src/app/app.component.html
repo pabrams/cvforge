@@ -2,13 +2,12 @@
   <h1>CVForge <span class="fw">Angular</span></h1>
   <p>Blurb library → CV builder → Typst export. Secret-scanned on the way in and out.</p>
 </header>
-
 <main>
   <!-- Blurb library -->
   <section class="panel">
     <div class="panel-head">
       <h2>Blurb Library</h2>
-      <button (click)="newBlurb()">+ New</button>
+      <button (click)="newBlurb()">+ New@if (newUnsaved) {<span class="unsaved" title="unsaved new blurb">*</span>}</button>
     </div>
     <div class="filters">
       <input placeholder="search…" [(ngModel)]="search" (ngModelChange)="reload()">
@@ -22,7 +21,6 @@
         <input type="checkbox" [(ngModel)]="showArchived" (ngModelChange)="reload()"> archived
       </label>
     </div>
-
     @for (g of skillGroups; track g.group) {
       <div class="skill-group">
         <div class="skill-group-head">
@@ -38,25 +36,21 @@
               <button class="atom-toggle"
                 [title]="(b.draft ? 'draft — AI-authored, needs polish' : 'your wording — used verbatim')
                          + ' · strength ' + b.strength + (b.strength >= 5 ? ' (renders bold)' : '')"
-                (click)="inCv(b) ? removeFromCv(b.id) : addToCv(b)">{{ b.body }}</button>
-              <button class="atom-edit" title="edit" (click)="edit(b)">✎</button>
+                (click)="toggleInCv(b)">{{ b.body }}</button>
+              <button class="atom-edit" [title]="isUnsaved(b) ? 'edit — unsaved edits' : 'edit'"
+                (click)="edit(b)">✎@if (isUnsaved(b)) {<span class="unsaved">*</span>}</button>
             </span>
           }
         </div>
       </div>
     }
-
     @for (b of looseBlurbs; track b.id) {
       <article class="blurb"
         [class.selected]="selectedBlurbId === b.id" [class.archived]="b.archived"
         (click)="selectBlurb(b)">
         <div class="blurb-top">
           <span class="cat cat-{{b.category}}">{{ b.category }}</span>
-          <strong>{{ b.title }}</strong>
-          <button class="row-toggle" [class.in-cv]="inCv(b)" [disabled]="!activeCv"
-            [title]="inCv(b) ? 'remove from CV' : 'add to CV'"
-            (click)="$event.stopPropagation(); inCv(b) ? removeFromCv(b.id) : addToCv(b)">
-            {{ inCv(b) ? '✓' : '+' }}</button>
+          <strong>{{ b.title }}@if (isUnsaved(b)) {<span class="unsaved" title="unsaved edits">*</span>}</strong>
           @if (b.archived) {
             <span class="archived-badge" title="superseded — kept so older CVs still export">archived</span>
           }
@@ -69,6 +63,11 @@
               <span class="secret" title="contains a detected secret">🔑 secret</span>
             }
           }
+          <button class="cv-toggle" [class.in-cv]="inCv(b)" [disabled]="!activeCv"
+            [title]="!activeCv ? 'no CV selected' : inCv(b) ? 'in CV — click to remove' : 'add to CV'"
+            [attr.aria-pressed]="inCv(b)"
+            [attr.aria-label]="inCv(b) ? 'remove from CV' : 'add to CV'"
+            (click)="toggleInCv(b); $event.stopPropagation()">{{ inCv(b) ? '✓' : '+' }}</button>
         </div>
         @if (selectedBlurbId === b.id) {
           <p class="body">{{ b.body }}</p>
@@ -85,120 +84,123 @@
     }
   </section>
 
-  <!-- Builder and Editor share the right column; selecting a blurb switches to Editor -->
-  <div class="right-col">
-    <nav class="tabs">
-      <button [class.active]="rightTab === 'builder'" (click)="rightTab = 'builder'">Builder</button>
-      <button [class.active]="rightTab === 'editor'" (click)="rightTab = 'editor'">Editor</button>
+  <!-- Builder / Editor tabs -->
+  <section class="panel workspace">
+    <nav class="tabs" role="tablist">
+      <button role="tab" [class.active]="tab === 'builder'" [attr.aria-selected]="tab === 'builder'"
+        (click)="tab = 'builder'">Builder</button>
+      <button role="tab" [class.active]="tab === 'editor'" [attr.aria-selected]="tab === 'editor'"
+        (click)="tab = 'editor'">Editor@if (anyUnsaved) {<span class="unsaved" title="unsaved edits">*</span>}</button>
     </nav>
 
-    @if (rightTab === 'builder') {
-  <section class="panel">
-    <div class="panel-head">
-      <h2>CV Builder</h2>
-      <button (click)="newCv()">+ New CV</button>
-    </div>
-    <select class="cv-select" [ngModel]="activeCv?.id" (ngModelChange)="selectById($event)">
-      @for (c of cvs; track c.id) {
-        <option [value]="c.id">{{ c.name }}</option>
-      }
-    </select>
-
-    @if (activeCv) {
-      <div>
-        <ol class="items">
-          @for (r of cvRows; track r.label + r.blurbIds[0]; let idx = $index) {
-            <li>
-              <span class="cat cat-{{r.category}}">{{ r.category }}</span>
-              <span class="item-title">{{ r.label }}</span>
-              <span class="reorder">
-                <button (click)="moveRow(idx, -1)" [disabled]="idx === 0">↑</button>
-                <button (click)="moveRow(idx, 1)" [disabled]="idx === cvRows.length - 1">↓</button>
-                <button class="danger" (click)="removeRow(r)">✕</button>
-              </span>
-            </li>
+    @if (tab === 'builder') {
+      <!-- CV builder -->
+      <div role="tabpanel">
+        <div class="panel-head">
+          <h2>CV Builder</h2>
+          <button (click)="newCv()">+ New CV</button>
+        </div>
+        <select class="cv-select" [ngModel]="activeCv?.id" (ngModelChange)="selectById($event)">
+          @for (c of cvs; track c.id) {
+            <option [value]="c.id">{{ c.name }}</option>
           }
-        </ol>
-        @if (!activeCv.items.length) {
-          <p class="empty">← Add blurbs from the library</p>
-        }
-        <button class="export" (click)="export()" [disabled]="!activeCv.items.length">Export .typ</button>
-        @if (exportError) {
-          <p class="export-error">⛔ {{ exportError }}</p>
+        </select>
+        @if (activeCv) {
+          <div>
+            <ol class="items">
+              @for (r of cvRows; track r.label + r.blurbIds[0]; let idx = $index) {
+                <li>
+                  <span class="cat cat-{{r.category}}">{{ r.category }}</span>
+                  <span class="item-title">{{ r.label }}</span>
+                  <span class="reorder">
+                    <button (click)="moveRow(idx, -1)" [disabled]="idx === 0">↑</button>
+                    <button (click)="moveRow(idx, 1)" [disabled]="idx === cvRows.length - 1">↓</button>
+                    <button class="danger" (click)="removeRow(r)">✕</button>
+                  </span>
+                </li>
+              }
+            </ol>
+            @if (!activeCv.items.length) {
+              <p class="empty">← Add blurbs from the library</p>
+            }
+            <button class="export" (click)="export()" [disabled]="!activeCv.items.length">Export .typ</button>
+            @if (exportError) {
+              <p class="export-error">⛔ {{ exportError }}</p>
+            }
+          </div>
         }
       </div>
-    }
-  </section>
     } @else {
-  <section class="panel editor">
-    <div class="panel-head"><h2>{{ editingId ? 'Edit Blurb' : 'New Blurb' }}</h2></div>
-    <label>Title <input [(ngModel)]="editing.title"></label>
-    <label>Category
-      <select [(ngModel)]="editing.category">
-        @for (c of categories; track c) {
-          <option [value]="c">{{ c }}</option>
+      <!-- Editor -->
+      <div class="editor" role="tabpanel">
+        <div class="panel-head"><h2>{{ editingId ? 'Edit Blurb' : 'New Blurb' }}@if (dirty) {<span class="unsaved" title="unsaved edits">*</span>}</h2></div>
+        <label>Title <input [(ngModel)]="editing.title"></label>
+        <label>Category
+          <select [(ngModel)]="editing.category">
+            @for (c of categories; track c) {
+              <option [value]="c">{{ c }}</option>
+            }
+          </select>
+        </label>
+        @if (editing.category === 'skill') {
+          <label>Skill group (the rendered line this belongs to, e.g. "Databases")
+            <input [(ngModel)]="editing.skillGroup" list="skill-groups">
+          </label>
+          <datalist id="skill-groups">
+            @for (g of skillGroups; track g.group) {
+              <option [value]="g.group"></option>
+            }
+          </datalist>
         }
-      </select>
-    </label>
-    @if (editing.category === 'skill') {
-      <label>Skill group (the rendered line this belongs to, e.g. "Databases")
-        <input [(ngModel)]="editing.skillGroup" list="skill-groups">
-      </label>
-      <datalist id="skill-groups">
-        @for (g of skillGroups; track g.group) {
-          <option [value]="g.group"></option>
+        @if (editing.category === 'project') {
+          <label>Project name (rendered in bold before the description)
+            <input [(ngModel)]="editing.org" (ngModelChange)="markEdited()"></label>
         }
-      </datalist>
-    }
-    @if (editing.category === 'project') {
-      <label>Project name (rendered in bold before the description)
-        <input [(ngModel)]="editing.org" (ngModelChange)="markEdited()"></label>
-    }
-    @if (editing.category === 'experience') {
-      <div class="exp-fields">
-        <label>Org <input [(ngModel)]="editing.org" (ngModelChange)="markEdited()"></label>
-        <label>Role <input [(ngModel)]="editing.roleTitle" (ngModelChange)="markEdited()"></label>
-        <label>Dates <input [(ngModel)]="editing.dates" (ngModelChange)="markEdited()"></label>
-        <label>Location <input [(ngModel)]="editing.location" (ngModelChange)="markEdited()"></label>
+        @if (editing.category === 'experience') {
+          <div class="exp-fields">
+            <label>Org <input [(ngModel)]="editing.org" (ngModelChange)="markEdited()"></label>
+            <label>Role <input [(ngModel)]="editing.roleTitle" (ngModelChange)="markEdited()"></label>
+            <label>Dates <input [(ngModel)]="editing.dates" (ngModelChange)="markEdited()"></label>
+            <label>Location <input [(ngModel)]="editing.location" (ngModelChange)="markEdited()"></label>
+          </div>
+        }
+        <label>
+          {{ editing.category === 'skill' ? 'Body (one skill, plain text — the exporter adds bold and escaping)'
+                                          : 'Body (one bullet per line)' }}
+          <textarea rows="6" [(ngModel)]="editing.body" (ngModelChange)="onBodyChange()"></textarea>
+        </label>
+        <div class="scan" [class.bad]="liveFindings.length" [class.good]="!liveFindings.length && editing.body">
+          @if (liveFindings.length) {
+            🔑 {{ liveFindings.length }} secret(s):
+            @for (f of liveFindings; track f) {
+              <code>{{ f.rule }}:{{ f.preview }}</code>
+            }
+            <button (click)="redact()">redact all</button>
+          } @else {
+            @if (editing.body) {
+              <span>✓ no secrets detected</span>
+            }
+          }
+        </div>
+        <label>Tags (comma-separated) <input [(ngModel)]="tagsText"></label>
+        <label class="row" [title]="editing.category === 'skill' ? 'a skill at strength 5 renders bold' : ''">
+          Strength <input type="range" min="0" max="5" [(ngModel)]="editing.strength"> {{ editing.strength }}
+          @if (editing.category === 'skill' && editing.strength >= 5) { <span class="hint">renders bold</span> }
+        </label>
+        <label class="row" title="AI-authored, unreviewed — editing the rendered wording unticks this automatically (tick or untick it yourself and your choice sticks); unticked = your wording, used verbatim, no AI edits">
+          <input type="checkbox" [ngModel]="editing.draft" (ngModelChange)="setDraft($event)"> draft</label>
+        <label class="row" title="confirmed free of secrets — can't be set while one is detected">
+          <input type="checkbox" [(ngModel)]="editing.publicSafe"> public-safe</label>
+        <label class="row" title="superseded — hidden from the library, kept so older CVs still export">
+          <input type="checkbox" [(ngModel)]="editing.archived"> archived</label>
+        <div class="editor-actions">
+          <button class="primary" (click)="save()" [disabled]="!editing.title || !dirty || saving"
+            [title]="!editing.title ? 'a title is required' : !dirty ? 'no unsaved changes' : ''">
+            {{ editingId ? 'Save' : 'Create' }}</button>
+          <button (click)="discard()" [disabled]="!dirty" title="throw away unsaved changes">discard</button>
+          <button (click)="clear()" title="blank new-blurb form; edits to an existing blurb are parked, an unsaved new blurb is discarded">clear</button>
+        </div>
       </div>
     }
-    <label>
-      {{ editing.category === 'skill' ? 'Body (one skill, plain text — the exporter adds bold and escaping)'
-                                      : 'Body (one bullet per line)' }}
-      <textarea rows="6" [(ngModel)]="editing.body" (ngModelChange)="onBodyChange()"></textarea>
-    </label>
-
-    <div class="scan" [class.bad]="liveFindings.length" [class.good]="!liveFindings.length && editing.body">
-      @if (liveFindings.length) {
-        🔑 {{ liveFindings.length }} secret(s):
-        @for (f of liveFindings; track f) {
-          <code>{{ f.rule }}:{{ f.preview }}</code>
-        }
-        <button (click)="redact()">redact all</button>
-      } @else {
-        @if (editing.body) {
-          <span>✓ no secrets detected</span>
-        }
-      }
-    </div>
-
-    <label>Tags (comma-separated) <input [(ngModel)]="tagsText"></label>
-    <label class="row" [title]="editing.category === 'skill' ? 'a skill at strength 5 renders bold' : ''">
-      Strength <input type="range" min="0" max="5" [(ngModel)]="editing.strength"> {{ editing.strength }}
-      @if (editing.category === 'skill' && editing.strength >= 5) { <span class="hint">renders bold</span> }
-    </label>
-    <label class="row" title="AI-authored, unreviewed — editing the rendered wording unticks this automatically (tick or untick it yourself and your choice sticks); unticked = your wording, used verbatim, no AI edits">
-      <input type="checkbox" [ngModel]="editing.draft" (ngModelChange)="setDraft($event)"> draft</label>
-    <label class="row" title="confirmed free of secrets — can't be set while one is detected">
-      <input type="checkbox" [(ngModel)]="editing.publicSafe"> public-safe</label>
-    <label class="row" title="superseded — hidden from the library, kept so older CVs still export">
-      <input type="checkbox" [(ngModel)]="editing.archived"> archived</label>
-
-    <div class="editor-actions">
-      <button class="primary" (click)="save()" [disabled]="!editing.title">{{ editingId ? 'Save' : 'Create' }}</button>
-      <button (click)="newBlurb()">clear</button>
-    </div>
   </section>
-    }
-  </div>
 </main>
