@@ -7,7 +7,7 @@ CVForge is a blurb library + CV builder. You assemble tailored CVs from reusable
 
 The `cvforge` MCP server (configured in `.mcp.json`) exposes the blurb library and CV builder as
 tools: `search_blurbs`, `list_skill_groups`, `get_blurb`, `create_blurb`, `update_blurb`,
-`list_cvs`, `create_cv`, `set_cv_items`, `export_typst`, `scan_secrets`, `list_tags`.
+`list_cvs`, `create_cv`, `set_cv_items`, `export_typst`, `list_tags`.
 
 **The API must be running** for those tools to work:
 
@@ -21,8 +21,8 @@ and the API binds to port 5041 instead, so the MCP tools (which expect 5170) can
 If a tool returns a connection error, the API isn't up — tell the user to start it.
 
 The API has no homepage — `http://localhost:5170/` is a 404 by design. Swagger is at `/swagger`,
-data under `/api/...`. The web UI is a separate SPA: `cd vue-client && npm run dev`
-(http://localhost:5173) or `cd angular-client && npm start` (http://localhost:4200).
+data under `/api/...`. The web UI is a separate SPA: `cd angular-client && npm start`
+(http://localhost:4200).
 
 ## The rules (non-negotiable)
 
@@ -41,8 +41,7 @@ data under `/api/...`. The web UI is a separate SPA: `cd vue-client && npm run d
    needs something the user doesn't have, say so plainly — don't invent it. Framing genuine
    transferable experience is fine; inventing history is not.
 
-4. **Secrets never leave.** Don't put credentials into blurbs. `export_typst` is blocked if any
-   selected blurb contains a detected secret; if that happens, tell the user which blurb to fix.
+4. **Never put credentials in blurbs.** This should go without saying.
 
 ## Typical flow
 
@@ -78,8 +77,7 @@ keyword wall in a new place.
 Skills with no `skillGroup`, and anything flagged `archived`, predate this and are kept only so
 older CVs still export unchanged. Don't select them for new CVs.
 
-UI note: the Angular client (`angular-client/`, port 4200) is the primary UI — new features go
-there only. The Vue client is a frozen demo.
+UI note: the Angular client (`angular-client/`, port 4200) is the UI.
 
 See `.claude/skills/cvforge/SKILL.md` for the step-by-step.
 

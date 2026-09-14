@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // CVForge MCP server — exposes the blurb library + CV builder to an MCP client
 // (e.g. Claude Code) over stdio. It is a thin wrapper over the CVForge REST API,
-// so all business logic (secret scanning, Typst export) lives in one place.
+// so all business logic (Typst export etc.) lives in one place.
 //
 // Guardrails baked in here (not just in prompting):
 //   • The `draft` flag is provenance: true = AI-authored, unreviewed. create_blurb /
@@ -180,24 +180,12 @@ server.registerTool("set_cv_items",
 server.registerTool("export_typst",
   {
     title: "Export CV to Typst",
-    description: "Render a CV to a Typst document (imports the portfolio's template.typ → feeds build_docx.py). Blocked if any selected blurb still contains a detected secret.",
+    description: "Render a CV to a Typst document (imports the portfolio's template.typ → feeds build_docx.py).",
     inputSchema: { cvId: z.number().int() },
   },
   async ({ cvId }) => {
     const r = await api(`/cvs/${cvId}/export.typ`);
-    if (r.status === 409) return err(`Export blocked — a selected blurb contains an unredacted secret: ${JSON.stringify(r.data)}`);
     return r.ok ? ok(typeof r.data === "string" ? r.data : JSON.stringify(r.data)) : err(`API ${r.status}`);
-  });
-
-server.registerTool("scan_secrets",
-  {
-    title: "Scan text for secrets",
-    description: "Check arbitrary text for likely credentials before storing it. Returns findings and a redacted version.",
-    inputSchema: { text: z.string() },
-  },
-  async ({ text }) => {
-    const r = await api("/scan", { method: "POST", body: { text } });
-    return r.ok ? ok(r.data) : err(`API ${r.status}`);
   });
 
 const transport = new StdioServerTransport();

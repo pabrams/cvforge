@@ -50,7 +50,6 @@ button.export { background: #1f4e79; color: #fff; border-color: #1f4e79; width: 
 .cat-experience { background: #eaf7ea; color: #2a6e2a; }
 .cat-skill { background: #fff3e0; color: #a15c00; }
 .strength { color: #e6a700; font-size: .8rem; }
-.secret { font-size: .7rem; color: #b00; background: #ffe9e9; padding: .05rem .35rem; border-radius: 3px; }
 .draft-badge { font-size: .7rem; color: #8a5a00; background: #fff3d6; padding: .05rem .35rem; border-radius: 3px; }
 .tag { font-size: .7rem; background: #f0f0f0; border-radius: 10px; padding: .05rem .45rem; margin-right: .25rem; }
 .cv-select { margin-bottom: .6rem; }
@@ -66,10 +65,6 @@ button.export { background: #1f4e79; color: #fff; border-color: #1f4e79; width: 
 .editor label.row input[type=checkbox] { width: auto; }
 .exp-fields { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; }
 .editor-actions { display: flex; gap: .4rem; margin-top: .5rem; }
-.scan { font-size: .78rem; padding: .4rem; border-radius: 5px; margin-bottom: .5rem; min-height: 1.2rem; }
-.scan.bad { background: #ffe9e9; color: #b00; }
-.scan.good { background: #eaf7ea; color: #2a6e2a; }
-.scan code { display: inline-block; background: #fff; border: 1px solid #f3c2c2; border-radius: 3px; padding: 0 .25rem; margin: 0 .2rem; }
 /* ---- atomic skills, grouped the way they render ---- */
 .filters .archived-toggle { display: flex; align-items: center; gap: .25rem; font-size: .75rem; color: #777; white-space: nowrap; }
 .filters .archived-toggle input { width: auto; }

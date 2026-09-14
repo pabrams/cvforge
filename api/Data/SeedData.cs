@@ -26,7 +26,6 @@ public static class SeedData
         var sql = T("SQL", "skill");
         var angular = T("Angular", "skill");
         var vue = T("Vue", "skill");
-        var ops = T("OPS", "client");
 
         var blurbs = new List<Blurb>
         {
@@ -67,14 +66,6 @@ public static class SeedData
                 Body = "*Front-End:* JavaScript, TypeScript, HTML / CSS, React, Angular, Vue, Blazor, Knockout.js — responsive, WCAG AA / AODA accessible.",
                 Strength = 3, PublicSafe = true, Draft = false,
                 Tags = new() { angular, vue },
-            },
-            new()
-            {
-                Title = "[SAMPLE] raw note with a leaked key",
-                Category = "experience",
-                Body = "Set up the calibration harness — exported EXAMPLE_API_KEY=PLACEHOLDER_not_a_real_secret and ran the tool. (This sample blurb shows the secret scanner blocking export until redacted. The value here is a deliberately fake placeholder.)",
-                Strength = 1, PublicSafe = false,
-                Tags = new() { ops },
             },
         };
 

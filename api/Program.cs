@@ -9,17 +9,16 @@ var builder = WebApplication.CreateBuilder(args);
 var conn = builder.Configuration.GetConnectionString("Default") ?? "Data Source=cvforge.db";
 builder.Services.AddDbContext<AppDbContext>(o => o.UseSqlite(conn));
 
-builder.Services.AddSingleton<SecretScanner>();
 builder.Services.AddSingleton<TypstExporter>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Allow the Angular (4200) and Vue (5173) dev servers to call the API.
+// Allow the Angular (4200) dev server to call the API.
 const string DevCors = "dev-clients";
 builder.Services.AddCors(o => o.AddPolicy(DevCors, p => p
-    .WithOrigins("http://localhost:4200", "http://localhost:5173")
+    .WithOrigins("http://localhost:4200")
     .AllowAnyHeader().AllowAnyMethod()));
 
 var app = builder.Build();

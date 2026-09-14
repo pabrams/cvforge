@@ -43,8 +43,7 @@ the API isn't running (`cd api && ASPNETCORE_URLS=http://localhost:5170 dotnet r
    actually asks for plus the ones that make the profile coherent; adding every atom in a group
    because it is there produces the keyword wall this library exists to avoid.
 
-6. **Export.** `export_typst` to produce the `.typ`. If it's blocked for a secret, tell the user
-   which blurb to redact and stop — don't try to route around it.
+6. **Export.** `export_typst` to produce the `.typ`.
 
 7. **Report back.** Tell the user:
    - which blurbs you used (and that non-draft ones are verbatim),
@@ -61,4 +60,4 @@ the API isn't running (`cd api && ASPNETCORE_URLS=http://localhost:5170 dotnet r
   and Typst escaping. Writing `*PostgreSQL*` or `C\#` there double-escapes it.
 - Don't paraphrase an existing blurb into a new one to avoid the verbatim rule.
 - Don't claim experience the blurbs don't support.
-- Don't put credentials in blurbs; don't try to bypass a blocked export.
+- Don't put credentials in blurbs — nothing scans for them.

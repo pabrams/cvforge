@@ -4,13 +4,12 @@ import { Observable } from 'rxjs';
 
 export const API_BASE = 'http://localhost:5170/api';
 
-export interface SecretFinding { rule: string; preview: string; index: number; length: number; }
 export interface Tag { id: number; name: string; kind: string; }
 export interface Blurb {
   id: number; title: string; category: string; body: string;
   org?: string; location?: string; roleTitle?: string; dates?: string;
   skillGroup?: string | null; archived: boolean;
-  strength: number; publicSafe: boolean; draft: boolean; tags: Tag[]; secrets: SecretFinding[];
+  strength: number; publicSafe: boolean; draft: boolean; tags: Tag[];
 }
 export interface BlurbInput {
   title: string; category: string; body: string;
@@ -23,7 +22,6 @@ export interface CvItem {
   skillGroup?: string | null;
 }
 export interface Cv { id: number; name: string; tagline: string; roleNotes: string; items: CvItem[]; }
-export interface ScanResult { findings: SecretFinding[]; redacted: string; clean: boolean; }
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -56,6 +54,4 @@ export class ApiService {
   exportTypst(cvId: number) {
     return this.http.get(this.exportUrl(cvId), { responseType: 'text' });
   }
-
-  scan(text: string) { return this.http.post<ScanResult>(`${API_BASE}/scan`, { text }); }
 }

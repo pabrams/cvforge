@@ -2,22 +2,18 @@
 
 A for creating CVs from a library of reusable blurbs/snippets. Exports to Typst.
 
-Angular is the main client/UI. There is also a Vue client, but it's used only as a demo.
-
 ## Stack
 
 | Layer | Tech |
 |-------|------|
 | Backend | **ASP.NET Core 8 Web API**, C#, **EF Core** (SQLite), **Swagger / OpenAPI** |
-| Client (primary) | **Angular** (standalone components, HttpClient) |c
-| Client (demo) | **Vue 3** (`<script setup>`, TypeScript, Vite) — frozen, kept for framework omparison |
+| Client | **Angular** (standalone components, HttpClient) |
 
 ## Features
 
 - **Blurb library** — reusable CV snippets with category (summary / experience / project / skill / qualification / education), Markdown-ish body, many-to-many **tags**, and a self-rated strength. Search + filter. `summary` is the short, human-readable opener — one paragraph of prose, not a keyword block. A `skill` is a *single* skill in plain text (`PostgreSQL`, `C#`) carrying a `skillGroup`; the exporter buckets the selected ones into one `*Databases:* a · b · c` line per group and owns the bold and the Typst escaping. Superseded blurbs are flagged `archived` and hidden from the library, so CVs that already reference them keep exporting unchanged.
 - **CV builder** — a CV is a named, ordered selection of blurbs. Multi-select, reorder, remove.
 - **Typst export** — renders the selected blurbs into a `.typ` that imports the portfolio's shared `template.typ`.
-- **Secret scanning** — a `SecretScanner` service flags likely credentials (AWS/OpenAI/GitHub/Slack keys, JWTs, private keys, `KEY=…` assignments, plus a Shannon-entropy sweep). Findings show live as you type; a blurb can't be marked *public-safe* while it contains a secret, and **export is blocked (HTTP 409)** if any selected blurb still carries one.
 
 ## Privacy model
 
@@ -34,12 +30,9 @@ ASPNETCORE_URLS=http://localhost:5170 dotnet run --no-launch-profile
 
 # 2) Angular client → http://localhost:4200
 cd angular-client && npm install && npm start
-
-# 3) Vue client (optional demo) → http://localhost:5173
-cd vue-client && npm install && npm run dev
 ```
 
-The API allows CORS from `localhost:4200` and `localhost:5173`.
+The API allows CORS from `localhost:4200`.
 
 ## Layout
 
@@ -48,10 +41,9 @@ cvforge/
 ├── api/              ASP.NET Core Web API (C# / EF Core / SQLite / Swagger)
 │   ├── Models/       Blurb, Tag, Cv, CvItem
 │   ├── Data/         AppDbContext, SeedData
-│   ├── Services/     SecretScanner, TypstExporter
-│   └── Controllers/  Blurbs, Tags, Cvs, Scan
-├── angular-client/   Angular SPA
-└── vue-client/       Vue 3 + Vite SPA
+│   ├── Services/     TypstExporter
+│   └── Controllers/  Blurbs, Tags, Cvs
+└── angular-client/   Angular SPA
 ```
 
 ## Roadmap

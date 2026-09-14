@@ -1,6 +1,6 @@
 <header>
   <h1>CVForge <span class="fw">Angular</span></h1>
-  <p>Blurb library → CV builder → Typst export. Secret-scanned on the way in and out.</p>
+  <p>Blurb library → CV builder → Typst export.</p>
 </header>
 <main>
   <!-- Blurb library -->
@@ -59,9 +59,6 @@
           }
           @if (selectedBlurbId === b.id) {
             <span class="strength" title="strength">{{ '★'.repeat(b.strength) }}</span>
-            @if (b.secrets.length) {
-              <span class="secret" title="contains a detected secret">🔑 secret</span>
-            }
           }
           <button class="cv-toggle" [class.in-cv]="inCv(b)" [disabled]="!activeCv"
             [title]="!activeCv ? 'no CV selected' : inCv(b) ? 'in CV — click to remove' : 'add to CV'"
@@ -167,21 +164,8 @@
         <label>
           {{ editing.category === 'skill' ? 'Body (one skill, plain text — the exporter adds bold and escaping)'
                                           : 'Body (one bullet per line)' }}
-          <textarea rows="6" [(ngModel)]="editing.body" (ngModelChange)="onBodyChange()"></textarea>
+          <textarea rows="6" [(ngModel)]="editing.body" (ngModelChange)="markEdited()"></textarea>
         </label>
-        <div class="scan" [class.bad]="liveFindings.length" [class.good]="!liveFindings.length && editing.body">
-          @if (liveFindings.length) {
-            🔑 {{ liveFindings.length }} secret(s):
-            @for (f of liveFindings; track f) {
-              <code>{{ f.rule }}:{{ f.preview }}</code>
-            }
-            <button (click)="redact()">redact all</button>
-          } @else {
-            @if (editing.body) {
-              <span>✓ no secrets detected</span>
-            }
-          }
-        </div>
         <label>Tags (comma-separated) <input [(ngModel)]="tagsText"></label>
         <label class="row" [title]="editing.category === 'skill' ? 'a skill at strength 5 renders bold' : ''">
           Strength <input type="range" min="0" max="5" [(ngModel)]="editing.strength"> {{ editing.strength }}
@@ -189,7 +173,7 @@
         </label>
         <label class="row" title="AI-authored, unreviewed — editing the rendered wording unticks this automatically (tick or untick it yourself and your choice sticks); unticked = your wording, used verbatim, no AI edits">
           <input type="checkbox" [ngModel]="editing.draft" (ngModelChange)="setDraft($event)"> draft</label>
-        <label class="row" title="confirmed free of secrets — can't be set while one is detected">
+        <label class="row" title="confirmed free of confidential content">
           <input type="checkbox" [(ngModel)]="editing.publicSafe"> public-safe</label>
         <label class="row" title="superseded — hidden from the library, kept so older CVs still export">
           <input type="checkbox" [(ngModel)]="editing.archived"> archived</label>

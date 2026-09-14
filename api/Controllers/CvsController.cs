@@ -13,9 +13,8 @@ public class CvsController : ControllerBase
 {
     private readonly AppDbContext _db;
     private readonly TypstExporter _exporter;
-    private readonly SecretScanner _scanner;
-    public CvsController(AppDbContext db, TypstExporter exporter, SecretScanner scanner)
-        => (_db, _exporter, _scanner) = (db, exporter, scanner);
+    public CvsController(AppDbContext db, TypstExporter exporter)
+        => (_db, _exporter) = (db, exporter);
 
     [HttpGet]
     public async Task<IEnumerable<CvDto>> Get() =>
@@ -82,12 +81,6 @@ public class CvsController : ControllerBase
         if (cv is null) return NotFound();
 
         var ordered = cv.Items.OrderBy(i => i.Order).Select(i => i.Blurb!).ToList();
-
-        // Guard: never let a detected secret leak into a generated document.
-        var leaky = ordered.Where(b => _scanner.HasSecrets(b.Body)).Select(b => b.Title).ToList();
-        if (leaky.Count > 0)
-            return Conflict(new { message = "Blurbs contain unredacted secrets; fix before export.", blurbs = leaky });
-
         var typ = _exporter.Export(cv, ordered);
         return File(Encoding.UTF8.GetBytes(typ), "text/plain", $"cv-{Slug(cv.Name)}.typ");
     }

@@ -1,6 +1,5 @@
 using CvForge.Api.Data;
 using CvForge.Api.Models;
-using CvForge.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,8 +10,7 @@ namespace CvForge.Api.Controllers;
 public class BlurbsController : ControllerBase
 {
     private readonly AppDbContext _db;
-    private readonly SecretScanner _scanner;
-    public BlurbsController(AppDbContext db, SecretScanner scanner) => (_db, _scanner) = (db, scanner);
+    public BlurbsController(AppDbContext db) => _db = db;
 
     [HttpGet]
     public async Task<IEnumerable<BlurbDto>> Get(
@@ -32,14 +30,14 @@ public class BlurbsController : ControllerBase
         var list = await query
             .OrderBy(b => b.SkillGroup ?? "")
             .ThenByDescending(b => b.Strength).ThenBy(b => b.Title).ToListAsync();
-        return list.Select(b => BlurbDto.From(b, _scanner));
+        return list.Select(BlurbDto.From);
     }
 
     [HttpGet("{id:int}")]
     public async Task<ActionResult<BlurbDto>> GetOne(int id)
     {
         var b = await _db.Blurbs.Include(x => x.Tags).FirstOrDefaultAsync(x => x.Id == id);
-        return b is null ? NotFound() : BlurbDto.From(b, _scanner);
+        return b is null ? NotFound() : BlurbDto.From(b);
     }
 
     [HttpPost]
@@ -50,7 +48,7 @@ public class BlurbsController : ControllerBase
         b.Tags = await ResolveTags(input.Tags);
         _db.Blurbs.Add(b);
         await _db.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetOne), new { id = b.Id }, BlurbDto.From(b, _scanner));
+        return CreatedAtAction(nameof(GetOne), new { id = b.Id }, BlurbDto.From(b));
     }
 
     [HttpPut("{id:int}")]
@@ -61,7 +59,7 @@ public class BlurbsController : ControllerBase
         ApplyInput(b, input);
         b.Tags = await ResolveTags(input.Tags);
         await _db.SaveChangesAsync();
-        return BlurbDto.From(b, _scanner);
+        return BlurbDto.From(b);
     }
 
     [HttpDelete("{id:int}")]
@@ -74,7 +72,7 @@ public class BlurbsController : ControllerBase
         return NoContent();
     }
 
-    /// <summary>Copy input onto the entity. A blurb can never be marked public-safe while it still contains secrets.</summary>
+    /// <summary>Copy input onto the entity.</summary>
     private void ApplyInput(Blurb b, BlurbInput input)
     {
         b.Title = input.Title;
@@ -87,7 +85,7 @@ public class BlurbsController : ControllerBase
         b.SkillGroup = string.IsNullOrWhiteSpace(input.SkillGroup) ? null : input.SkillGroup.Trim();
         b.Archived = input.Archived;
         b.Strength = Math.Clamp(input.Strength, 0, 5);
-        b.PublicSafe = input.PublicSafe && !_scanner.HasSecrets(input.Body);
+        b.PublicSafe = input.PublicSafe;
         b.Draft = input.Draft;
     }
 

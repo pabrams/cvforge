@@ -1,7 +1,7 @@
 import { Component, HostListener, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
-import { ApiService, Blurb, BlurbInput, Cv, SecretFinding } from './api.service';
+import { ApiService, Blurb, BlurbInput, Cv } from './api.service';
 const EMPTY: BlurbInput = {
   title: '', category: 'experience', body: '',
   org: '', location: '', roleTitle: '', dates: '',
@@ -19,7 +19,6 @@ interface EditorSession {
   id: number | null;
   editing: BlurbInput;
   tagsText: string;
-  liveFindings: SecretFinding[];
   draftChosen: boolean;
   cleanState: string;
 }
@@ -47,7 +46,6 @@ export class AppComponent implements OnInit {
   editing: BlurbInput = { ...EMPTY };
   editingId: number | null = null;
   tagsText = '';
-  liveFindings: SecretFinding[] = [];
   saving = false;
   /** The form as last loaded or saved; Save stays disabled until the form differs from it. */
   private cleanState = this.formState();
@@ -202,7 +200,6 @@ export class AppComponent implements OnInit {
       strength: b.strength, publicSafe: b.publicSafe, draft: b.draft, tags: b.tags.map(t => t.name),
     };
     this.tagsText = b.tags.map(t => t.name).join(', ');
-    this.liveFindings = b.secrets;
     this.draftChosen = false;
     this.cleanState = this.formState();
   }
@@ -227,14 +224,10 @@ export class AppComponent implements OnInit {
     this.editing = editing;
     this.tagsText = tagsText;
     this.draftChosen = false;
-    const target = this.editing, body = this.editing.body;
-    this.api.scan(body).subscribe(r => {
-      if (this.editing === target && this.editing.body === body) this.liveFindings = r.findings;
-    });
   }
   private openNew() { if (!this.resume('new')) this.resetEditor(); }
   private resetEditor() {
-    this.editingId = null; this.editing = { ...EMPTY }; this.tagsText = ''; this.liveFindings = [];
+    this.editingId = null; this.editing = { ...EMPTY }; this.tagsText = '';
     this.draftChosen = false;
     this.cleanState = this.formState();
   }
@@ -243,7 +236,7 @@ export class AppComponent implements OnInit {
     if (!this.dirty) return;
     this.unsaved.set(this.editingId ?? 'new', {
       id: this.editingId, editing: this.editing, tagsText: this.tagsText,
-      liveFindings: this.liveFindings, draftChosen: this.draftChosen, cleanState: this.cleanState,
+      draftChosen: this.draftChosen, cleanState: this.cleanState,
     });
   }
   private resume(key: number | 'new'): boolean {
@@ -253,7 +246,6 @@ export class AppComponent implements OnInit {
     this.editingId = s.id;
     this.editing = s.editing;
     this.tagsText = s.tagsText;
-    this.liveFindings = s.liveFindings;
     this.draftChosen = s.draftChosen;
     this.cleanState = s.cleanState;
     return true;
@@ -275,27 +267,10 @@ export class AppComponent implements OnInit {
   /**
    * A human rewording what renders on the CV (body, org, role, dates, location) makes it theirs:
    * untick draft live, visibly, before saving — unless they set the checkbox by hand this session.
-   * Internal metadata (title, tags, strength, skill group) and "redact all" don't claim authorship.
+   * Internal metadata (title, tags, strength, skill group) doesn't claim authorship.
    */
   markEdited() { if (!this.draftChosen) this.editing.draft = false; }
   setDraft(draft: boolean) { this.editing.draft = draft; this.draftChosen = true; }
-  onBodyChange() {
-    this.markEdited();
-    // a response landing after a blurb switch, or after further typing, must not touch the open form
-    const target = this.editing, body = this.editing.body;
-    this.api.scan(body).subscribe(r => {
-      if (this.editing === target && this.editing.body === body) this.liveFindings = r.findings;
-    });
-  }
-  redact() {
-    const target = this.editing, body = this.editing.body;
-    this.api.scan(body).subscribe(r => {
-      if (this.editing === target && this.editing.body === body) {
-        this.editing.body = r.redacted;
-        this.liveFindings = [];
-      }
-    });
-  }
   save() {
     this.editing.tags = this.tagsText.split(',').map(s => s.trim()).filter(Boolean);
     const target = this.editing;
